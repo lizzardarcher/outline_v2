@@ -36,7 +36,9 @@ def get_subscription():
     markup = InlineKeyboardMarkup()
     btn1 = InlineKeyboardButton(text=f'Пополнить баланс', callback_data=f'account:top_up_balance')
     btn2 = InlineKeyboardButton(text=f'Купить подписку', callback_data=f'account:buy_subscripton')
+    btn3 = InlineKeyboardButton(text=f'Помощь', callback_data=f'popup_help')
     markup.row(btn1, btn2)
+    markup.row(btn3)
     markup.row(btn_back)
     return markup
 
