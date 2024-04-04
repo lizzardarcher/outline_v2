@@ -6,6 +6,8 @@ from telebot.async_telebot import AsyncTeleBot
 import django_orm
 from bot.models import TelegramBot
 from bot.models import TelegramUser
+from bot.models import VpnKey
+from bot.models import Server
 
 from bot.main import msg
 from bot.main import markup
@@ -32,6 +34,7 @@ async def start(message):
 @bot.callback_query_handler(func=lambda call: True)
 async def callback_query_handlers(call):
     data = call.data.split(':')
+    user = TelegramUser.objects.get(user_id=call.message.chat.id)
     print(data)
     if call.message.chat.type == 'private':
 
@@ -39,11 +42,20 @@ async def callback_query_handlers(call):
             await bot.send_message(call.message.chat.id, msg.avail_location_choice,
                                    reply_markup=markup.get_avail_location())
         elif 'country' in data:
-            if TelegramUser.objects.get(user_id=call.message.chat.id).subscription_status:
+            if user.subscription_status:
+                keys = VpnKey.objects.filter(user=user)
+                # country = VpnKey.objects.filter(user=user).last().server.country
+                countries = [x.server.country.name for x in keys ]
+                print(keys)
+                print(countries)
 
                 if 'netherland' in data:
-                    await bot.send_message(call.message.chat.id, msg.key_avail)
-
+                    if 'netherland' in countries:
+                        key = VpnKey.objects.filter(user=user, server__country__name='netherland').last().key
+                        await bot.send_message(call.message.chat.id, msg.key_avail)
+                        await bot.send_message(call.message.chat.id, text=f'<code>{key}</code>',reply_markup=markup.key_menu(), parse_mode='HTML')
+                    else:
+                        await bot.send_message(call.message.chat.id, text=msg.no_key_avail, reply_markup=markup.get_subscription())
                 elif 'poland' in data:
                     await bot.send_message(call.message.chat.id, msg.key_avail)
 
@@ -67,6 +79,9 @@ async def callback_query_handlers(call):
             pass
         elif 'common_info' in data:
             ...
+        elif 'back' in data:
+            await bot.delete_message(call.message.chat.id, call.message.message_id)
+            await bot.send_message(chat_id=call.message.chat.id, text=msg.main_menu_choice, reply_markup=markup.start())
 
 
 asyncio.run(bot.polling(non_stop=True))
