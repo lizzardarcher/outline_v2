@@ -11,7 +11,8 @@ class TelegramUser(models.Model):
     is_banned = models.BooleanField(default=False, verbose_name='Is Banned')
     balance = models.DecimalField(max_digits=10, decimal_places=2, default=0.00, verbose_name='Balance')
     subscription_status = models.BooleanField(default=False, verbose_name='Subscription status')
-    subscription_expiration = models.DateField(default=None, blank=True, null=True, verbose_name='Subscription expiration')
+    subscription_expiration = models.DateField(default=None, blank=True, null=True,
+                                               verbose_name='Subscription expiration')
 
     def __str__(self):
         return f"{self.first_name} {self.last_name} ({self.username})"
@@ -86,9 +87,21 @@ class Server(models.Model):
     api_url = models.CharField(max_length=1000, blank=True, null=True, verbose_name='API URL')
     cert_sha256 = models.CharField(max_length=1000, blank=True, null=True, verbose_name='Certificate SHA256')
     script_out = models.TextField(blank=True, null=True, verbose_name='Script Out Info JSON')
+    country = models.ForeignKey('Country', on_delete=models.CASCADE, null=True, blank=True, verbose_name='Country')
 
     def __str__(self):
         return f"{self.ip_address} {self.hosting} ({self.created_at})"
+
+
+class Country(models.Model):
+    name = models.CharField(max_length=100, blank=True, null=True, verbose_name='Name')
+
+    def __str__(self):
+        return f"{self.name}"
+
+    class Meta:
+        verbose_name = 'Country'
+        verbose_name_plural = 'Countries'
 
 
 class GlobalSettings(models.Model):

@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.models import Group
 
-from apps.bot.models import TelegramBot, TelegramUser, TelegramReferral, ReferralSettings, GlobalSettings, VpnKey, \
+from bot.models import TelegramBot, TelegramUser, TelegramReferral, ReferralSettings, GlobalSettings, VpnKey, \
     Server, IncomeInfo, Transaction, Price, WithdrawalRequest
 from django.conf import settings
 
