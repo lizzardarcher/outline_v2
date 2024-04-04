@@ -61,15 +61,21 @@ class Transaction(models.Model):
 
 
 class VpnKey(models.Model):
-    user = models.ForeignKey(TelegramUser, on_delete=models.CASCADE)
-    key = models.CharField(max_length=1000, blank=True, null=True, verbose_name='Key')
-    is_limit = models.BooleanField(null=True, default=False, verbose_name='Limit')
-    data_limit = models.IntegerField(blank=True, null=True, verbose_name='Data Limit GB')
     created_at = models.DateField(auto_now_add=True, verbose_name='created_at')
     server = models.ForeignKey(to='Server', on_delete=models.CASCADE, verbose_name='Server', blank=True, null=True)
+    user = models.ForeignKey(TelegramUser, on_delete=models.CASCADE)
+
+    key_id = models.CharField(max_length=1000, verbose_name='Key ID', unique=True, primary_key=True)
+    name = models.CharField(max_length=255, verbose_name='Name', blank=True, null=True)
+    password = models.CharField(max_length=255, verbose_name='Password', blank=True, null=True)
+    port = models.IntegerField(verbose_name='Port', blank=True, null=True)
+    method = models.CharField(max_length=255, verbose_name='Method', blank=True, null=True)
+    access_url = models.CharField(max_length=2000, verbose_name='Access URL', blank=True, null=True)
+    used_bytes = models.IntegerField(verbose_name='Used Bytes', blank=True, null=True)
+    data_limit = models.IntegerField(verbose_name='Data Limit', blank=True, null=True)
 
     def __str__(self):
-        return f"{self.key} ({self.created_at})"
+        return f"{self.user} {self.access_url} ({self.created_at})"
 
 
 class Server(models.Model):
@@ -86,7 +92,7 @@ class Server(models.Model):
 
     api_url = models.CharField(max_length=1000, blank=True, null=True, verbose_name='API URL')
     cert_sha256 = models.CharField(max_length=1000, blank=True, null=True, verbose_name='Certificate SHA256')
-    script_out = models.TextField(blank=True, null=True, verbose_name='Script Out Info JSON')
+    script_out = models.JSONField(blank=True, null=True, verbose_name='Script Out Info JSON')
     country = models.ForeignKey('Country', on_delete=models.CASCADE, null=True, blank=True, verbose_name='Country')
 
     def __str__(self):

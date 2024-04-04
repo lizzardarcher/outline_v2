@@ -184,7 +184,7 @@ class IncomeInfo(admin.ModelAdmin):
 
 @admin.register(VpnKey)
 class VpnKey(admin.ModelAdmin):
-    list_display = ('user', 'server', 'is_limit', 'data_limit', 'created_at')
+    list_display = ('user', 'server', 'data_limit', 'created_at')
 
     def has_change_permission(self, request, obj=None):
         return False

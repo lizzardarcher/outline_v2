@@ -11,6 +11,7 @@ from bot.models import Server
 
 from bot.main import msg
 from bot.main import markup
+from bot.main import outline_client
 
 bot = AsyncTeleBot(TelegramBot.objects.get(pk=1).token)
 logging.basicConfig(level=logging.DEBUG)
