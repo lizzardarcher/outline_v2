@@ -90,7 +90,7 @@ async def callback_query_handlers(call):
         elif 'account' in data:
 
             if 'top_up_balance' in data:
-                ...
+                await bot.send_message(call.message.chat.id, text=msg.paymemt_menu, reply_markup=markup.paymemt_menu())
             elif 'buy_subscripton' in data:
                 ...
         elif 'profile' in data:

@@ -43,6 +43,25 @@ def get_subscription():
     return markup
 
 
+def paymemt_menu():
+    markup = InlineKeyboardMarkup()
+    markup.add(InlineKeyboardButton(text=f'Способ 1', callback_data=f'payment_1'))
+    markup.add(InlineKeyboardButton(text=f'Способ 2 ', callback_data=f'payment_2'))
+    markup.add(btn_back)
+    return markup
+
+
+def choose_subscription():
+    markup = InlineKeyboardMarkup()
+    markup.add(InlineKeyboardButton(text=f'1 месяц', callback_data=f'sub_1'))
+    markup.add(InlineKeyboardButton(text=f'3 месяца', callback_data=f'sub_2'))
+    markup.add(InlineKeyboardButton(text=f'6 месяцев', callback_data=f'sub_3'))
+    markup.add(InlineKeyboardButton(text=f'1 год', callback_data=f'sub_4'))
+    markup.add(InlineKeyboardButton(text=f'Пожизненная', callback_data=f'sub_5'))
+    markup.add(btn_back)
+    return markup
+
+
 def key_menu():
     markup = InlineKeyboardMarkup()
     btn1 = InlineKeyboardButton(text=f'Заменить ключ', callback_data=f'account:swap_key')
