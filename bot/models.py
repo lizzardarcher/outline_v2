@@ -115,7 +115,7 @@ class GlobalSettings(models.Model):
     time_web_api_key = models.CharField(max_length=1000, blank=True, null=True, verbose_name='Time Web API')
     payment_system_api_key = models.CharField(max_length=1000, blank=True, null=True, verbose_name='Payment System 1')
     prices = models.ForeignKey(to='Price', on_delete=models.CASCADE, null=True, blank=True, verbose_name='Prices')
-
+    data_limit = models.IntegerField(blank=True, null=True, verbose_name='Data Limit GB')
     def __str__(self):
         return f"Settings"
 

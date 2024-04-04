@@ -3,25 +3,42 @@ import django_orm
 from bot.models import VpnKey
 from bot.models import Server
 from bot.models import TelegramUser
+from bot.models import GlobalSettings
 
-data = {"apiUrl": "https://213.171.12.240:61550/pyDHk6tgZk6bnd321tkgXg",
-        "certSha256": "CAD7DB50513F6F74FCD016D0BC7DC30C24645803024EA5AD5353BF509F48E73B"}
 
 # Setup the access with the API URL (Use the one provided to you after the server setup)
 
 # Get all access URLs on the server
 # for key in client.get_keys():
 #     print(key)
-
+'''
+1GB = 1024 * 1024 * 1024
+'''
 
 def create_new_key(server: Server, user: TelegramUser) -> str:
+    data_limit = GlobalSettings.objects.all()[0].data_limit
+    data_limit = data_limit * 1024 * 1024 * 1024
     data = dict(server.script_out)
     client = OutlineVPN(api_url=data['apiUrl'], cert_sha256=data['certSha256'])
-    key = client.create_key()
-    VpnKey.objects.create(server=server, user=user)
+    key = client.create_key(
+        key_id=f'{str(user.user_id)}:{str(server.id)}',
+        name=f'{str(user.user_id)}+ {server.ip_address}',
+        data_limit=data_limit
+    )
+    VpnKey.objects.create(
+        server=server,
+        user=user,
+        key_id=f'{key.key_id}:{server.ip_address}',
+        name=key.name,
+        password=key.password,
+        port=key.port,
+        method=key.method,
+        access_url=key.access_url,
+        used_bytes=key.used_bytes,
+        data_limit=key.data_limit
+    )
     return key.access_url
 
-print(create_new_key(server=Server.objects.all()[0], user=TelegramUser.objects.all()[0]))
 # Create a new key
 # new_key = client.create_key()
 # print(new_key)

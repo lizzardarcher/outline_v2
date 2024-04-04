@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import traceback
 
 from telebot.async_telebot import AsyncTeleBot
 
@@ -11,7 +12,7 @@ from bot.models import Server
 
 from bot.main import msg
 from bot.main import markup
-from bot.main import outline_client
+from bot.main.outline_client import create_new_key
 
 bot = AsyncTeleBot(TelegramBot.objects.get(pk=1).token)
 logging.basicConfig(level=logging.DEBUG)
@@ -83,10 +84,16 @@ async def callback_query_handlers(call):
                                                reply_markup=markup.get_subscription())
                 elif 'russia' in data:
                     if 'russia' in countries:
-                        key = VpnKey.objects.filter(user=user, server__country__name='russia').last().key
+                        try:
+                            key = VpnKey.objects.filter(user=user, server__country__name='russia').last().key
+                        except:
+                            try:
+                                key = create_new_key( server=Server.objects.filter(country__name='russia', keys_generated__lte=100), user=user)
+                            except:
+                                await bot.send_message(call.message.chat.id, text=f'{traceback.format_exc()}')
+
                         await bot.send_message(call.message.chat.id, msg.key_avail)
-                        await bot.send_message(call.message.chat.id, text=f'<code>{key}</code>',
-                                               reply_markup=markup.key_menu(), parse_mode='HTML')
+                        await bot.send_message(call.message.chat.id, text=f'<code>{key}</code>', reply_markup=markup.key_menu(), parse_mode='HTML')
                     else:
                         await bot.send_message(call.message.chat.id, text=msg.no_key_avail,
                                                reply_markup=markup.get_subscription())
