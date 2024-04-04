@@ -1,8 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.models import Group
 
-from bot.models import TelegramBot, TelegramUser, TelegramReferral, ReferralSettings, GlobalSettings, VpnKey, \
-    Server, IncomeInfo, Transaction, Price, WithdrawalRequest
+from bot.models import *
 from django.conf import settings
 
 DEBUG = settings.DEBUG
@@ -11,6 +10,7 @@ admin.site.site_header = "Outline VPN Админ Панель"
 admin.site.site_title = "Outline VPN"
 admin.site.index_title = "Добро пожаловать в Outline VPN Админ Панель"
 admin.site.unregister(Group)
+admin.site.register(Country)
 
 
 class WithdrawalRequestInline(admin.TabularInline):
