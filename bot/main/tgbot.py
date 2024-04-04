@@ -35,8 +35,13 @@ async def start(message):
 async def callback_query_handlers(call):
     data = call.data.split(':')
     user = TelegramUser.objects.get(user_id=call.message.chat.id)
+
+    async def send_dummy():
+        await bot.send_message(call.message.chat.id, text=msg.dummy_message, reply_markup=markup.start())
+
     print(data)
     if call.message.chat.type == 'private':
+        await bot.delete_message(call.message.chat.id, call.message.message_id)
 
         if 'manage' in data:
             await bot.send_message(call.message.chat.id, msg.avail_location_choice,
@@ -92,18 +97,42 @@ async def callback_query_handlers(call):
             if 'top_up_balance' in data:
                 await bot.send_message(call.message.chat.id, text=msg.paymemt_menu, reply_markup=markup.paymemt_menu())
             elif 'buy_subscripton' in data:
-                ...
+                await bot.send_message(call.message.chat.id, text=msg.choose_subscription, reply_markup=markup.choose_subscription())
+
+            elif 'swap_key' in data:
+                await send_dummy()
+
+            elif 'payment_1' in data:
+                await send_dummy()
+            elif 'payment_2' in data:
+                await send_dummy()
+
+            elif 'sub_1' in data:
+                await send_dummy()
+            elif 'sub_2' in data:
+                await send_dummy()
+            elif 'sub_3' in data:
+                await send_dummy()
+            elif 'sub_4' in data:
+                await send_dummy()
+            elif 'sub_5' in data:
+                await send_dummy()
+
         elif 'profile' in data:
-            ...
+            user_id = user.user_id
+            balance = user.balance
+            sub = str(user.subscription_expiration) if user.subscription_status else 'Нет подписки'
+            reg_date = str(user.join_date)
+            await bot.send_message(call.message.chat.id, text=msg.profile.format(user_id, balance, sub, reg_date), reply_markup=markup.start(), parse_mode='HTML')
         elif 'help' in data:
-            await bot.delete_message(call.message.chat.id, call.message.message_id)
-            await bot.send_message(call.message.chat.id, text=msg.help_message, reply_markup=markup.start(), parse_mode='HTML')
+            await bot.send_message(call.message.chat.id, text=msg.help_message, reply_markup=markup.start(),
+                                   parse_mode='HTML')
         elif 'popup_help' in data:
             await bot.answer_callback_query(call.id, text=msg.popup_help, show_alert=True)
         elif 'common_info' in data:
-            ...
+
+            await bot.send_message(call.message.chat.id, text=msg.commom_info, reply_markup=markup.back())
         elif 'back' in data:
-            await bot.delete_message(call.message.chat.id, call.message.message_id)
             await bot.send_message(chat_id=call.message.chat.id, text=msg.main_menu_choice, reply_markup=markup.start())
 
 
