@@ -66,11 +66,11 @@ def paymemt_menu():
 
 def choose_subscription():
     markup = InlineKeyboardMarkup()
-    markup.add(InlineKeyboardButton(text=f'1 месяц', callback_data=f'account:sub_1'))
-    markup.add(InlineKeyboardButton(text=f'3 месяца', callback_data=f'account:sub_2'))
-    markup.add(InlineKeyboardButton(text=f'6 месяцев', callback_data=f'account:sub_3'))
-    markup.add(InlineKeyboardButton(text=f'1 год', callback_data=f'account:sub_4'))
-    markup.add(InlineKeyboardButton(text=f'Пожизненная', callback_data=f'account:sub_5'))
+    markup.add(InlineKeyboardButton(text=f'1 месяц (100 Gb)', callback_data=f'account:sub_1'))
+    markup.add(InlineKeyboardButton(text=f'3 месяца (400 Gb)', callback_data=f'account:sub_2'))
+    markup.add(InlineKeyboardButton(text=f'6 месяцев (1 Tb)', callback_data=f'account:sub_3'))
+    markup.add(InlineKeyboardButton(text=f'1 год (3 Tb)', callback_data=f'account:sub_4'))
+    markup.add(InlineKeyboardButton(text=f'Пожизненная (безлимит)', callback_data=f'account:sub_5'))
     markup.add(btn_back)
     return markup
 

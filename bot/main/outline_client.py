@@ -5,28 +5,30 @@ import django_orm
 from bot.models import VpnKey
 from bot.models import Server
 from bot.models import TelegramUser
-from bot.models import GlobalSettings
 
 
-# Get all access URLs on the server
-# for key in client.get_keys():
-#     print(key)
-def update_keys_data_limit(user: TelegramUser):
+async def update_keys_data_limit(user: TelegramUser):
     try:
         servers = [data.script_out for data in Server.objects.all()]
 
         for data in servers:
             client = OutlineVPN(api_url=data['apiUrl'], cert_sha256=data['certSha256'])
 
-            for key in client.get_keys():
-                VpnKey.objects.filter(key_id=key.key_id).update(used_bytes=key.used_bytes)
-                data_limit = user.data_limit - key.used_bytes
-                user.update(used_bytes=key.used_bytes)
-                print(key.used_bytes, key.key_id)
+            key = client.get_keys()[0]
+            VpnKey.objects.filter(key_id=key.key_id).update(used_bytes=key.used_bytes)
+            print(key)
+            print(user)
+            print(user.data_limit)
+            if not key.used_bytes:
+                key.used_bytes = 0
+            if key.used_bytes > 300000000:
+                data_limit = int(user.data_limit) - int(key.used_bytes)
+                TelegramUser.objects.filter(user_id=user.user_id).update(data_limit=data_limit)
+
+            print(key.used_bytes, key.key_id)
     except:
         print(traceback.format_exc())
 
-# update_keys_data_limit()
 
 async def create_new_key(server: Server, user: TelegramUser) -> str:
     try:

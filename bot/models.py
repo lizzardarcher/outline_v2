@@ -13,7 +13,7 @@ class TelegramUser(models.Model):
     subscription_status = models.BooleanField(default=False, verbose_name='Subscription status')
     subscription_expiration = models.DateField(default=None, blank=True, null=True,
                                                verbose_name='Subscription expiration')
-    data_limit = models.IntegerField(verbose_name='Data Limit', blank=True, null=True)
+    data_limit = models.BigIntegerField(verbose_name='Data Limit', blank=True, null=True)
 
     def __str__(self):
         return f"{self.first_name} {self.last_name} ({self.username})"
@@ -72,8 +72,8 @@ class VpnKey(models.Model):
     port = models.IntegerField(verbose_name='Port', blank=True, null=True)
     method = models.CharField(max_length=255, verbose_name='Method', blank=True, null=True)
     access_url = models.CharField(max_length=2000, verbose_name='Access URL', blank=True, null=True)
-    used_bytes = models.IntegerField(verbose_name='Used Bytes', blank=True, null=True)
-    data_limit = models.IntegerField(verbose_name='Data Limit', blank=True, null=True)
+    used_bytes = models.BigIntegerField(verbose_name='Used Bytes', blank=True, null=True)
+    data_limit = models.BigIntegerField(verbose_name='Data Limit', blank=True, null=True)
 
     def __str__(self):
         return f"{self.user} {self.access_url} ({self.created_at})"
@@ -116,7 +116,7 @@ class GlobalSettings(models.Model):
     time_web_api_key = models.CharField(max_length=1000, blank=True, null=True, verbose_name='Time Web API')
     payment_system_api_key = models.CharField(max_length=1000, blank=True, null=True, verbose_name='Payment System 1')
     prices = models.ForeignKey(to='Price', on_delete=models.CASCADE, null=True, blank=True, verbose_name='Prices')
-    data_limit = models.IntegerField(blank=True, null=True, verbose_name='Data Limit GB')
+    data_limit = models.BigIntegerField(blank=True, null=True, verbose_name='Data Limit GB')
     def __str__(self):
         return f"Settings"
 
@@ -141,7 +141,7 @@ class ReferralSettings(models.Model):
 
 
 class IncomeInfo(models.Model):
-    total_amount = models.IntegerField(blank=True, null=True, verbose_name='Amount Total')
+    total_amount = models.DecimalField(blank=True, null=True, decimal_places=2, max_digits=10, verbose_name='Amount Total')
     user_balance_total = models.DecimalField(blank=True, null=True, decimal_places=2, max_digits=10,
                                              verbose_name='User balance total')
 

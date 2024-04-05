@@ -35,6 +35,7 @@ profile = '''
 💰   <b>Баланс:</b>    <code>{1} ₽</code>
 🎩   <b>Подписка до:</b>    <code>{2}</code>
 🕰️   <b>Активен с:</b>    <code>{3}</code>
+💻   <b>Остаток :</b>    <code>{4} Gb</code>
 '''
 
 commom_info = '''

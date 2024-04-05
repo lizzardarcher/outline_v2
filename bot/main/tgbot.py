@@ -1,8 +1,8 @@
 import asyncio
 import logging
 import traceback
+from math import ceil
 
-from django.db import IntegrityError
 from django.conf import settings
 from telebot.async_telebot import AsyncTeleBot
 
@@ -19,6 +19,7 @@ from bot.main import markup
 from bot.main.utils import return_matches
 from bot.main.outline_client import create_new_key
 from bot.main.outline_client import delete_user_keys
+from bot.main.outline_client import update_keys_data_limit
 
 bot = AsyncTeleBot(TelegramBot.objects.get(pk=1).token)
 logging.basicConfig(level=logging.DEBUG)
@@ -162,11 +163,14 @@ async def callback_query_handlers(call):
                 await send_dummy()
 
         elif 'profile' in data:
+            await update_keys_data_limit(user=user)
             user_id = user.user_id
             balance = user.balance
             sub = str(user.subscription_expiration) if user.subscription_status else 'Нет подписки'
             reg_date = str(user.join_date)
-            await bot.send_message(call.message.chat.id, text=msg.profile.format(user_id, balance, sub, reg_date),
+            data_limit = str(ceil(user.data_limit/(1016**3)))
+
+            await bot.send_message(call.message.chat.id, text=msg.profile.format(user_id, balance, sub, reg_date, data_limit),
                                    reply_markup=markup.my_profile(), parse_mode='HTML')
 
         elif 'referral' in data:
