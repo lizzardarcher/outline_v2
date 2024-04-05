@@ -9,9 +9,11 @@ from bot.models import TelegramBot
 from bot.models import TelegramUser
 from bot.models import VpnKey
 from bot.models import Server
+from bot.models import Country
 
 from bot.main import msg
 from bot.main import markup
+from bot.main.utils import is_matches_in_list, return_matches
 from bot.main.outline_client import create_new_key
 
 bot = AsyncTeleBot(TelegramBot.objects.get(pk=1).token)
@@ -37,7 +39,7 @@ async def start(message):
 async def callback_query_handlers(call):
     data = call.data.split(':')
     user = TelegramUser.objects.get(user_id=call.message.chat.id)
-
+    country_list = [x.name for x in Country.objects.all()]
     async def send_dummy():
         await bot.send_message(call.message.chat.id, text=msg.dummy_message, reply_markup=markup.start())
 
@@ -52,18 +54,18 @@ async def callback_query_handlers(call):
             if user.subscription_status:
                 keys = VpnKey.objects.filter(user=user)
                 countries = [x.server.country.name for x in keys]
-                print(keys)
-                print(countries)
+                country = return_matches(country_list, data)
 
-                if 'netherland' in data:
-                    if 'netherland' in countries:
-                        key = VpnKey.objects.filter(user=user, server__country__name='netherland').last().key
+                if country:
+                    try:
+                        key = VpnKey.objects.filter(user=user, server__country__name=country).last().access_url
                         await bot.send_message(call.message.chat.id, msg.key_avail)
-                        await bot.send_message(call.message.chat.id, text=f'<code>{key}</code>',
-                                               reply_markup=markup.key_menu(), parse_mode='HTML')
-                    else:
-                        await bot.send_message(call.message.chat.id, text=msg.no_key_avail,
-                                               reply_markup=markup.get_subscription())
+                        await bot.send_message(call.message.chat.id, text=f'<code>{key}</code>', reply_markup=markup.key_menu(), parse_mode='HTML')
+                    except:
+                        await bot.send_message(call.message.chat.id, text=msg.get_new_key,
+                                               reply_markup=markup.get_new_key('russia'))
+
+
                 elif 'poland' in data:
                     if 'poland' in countries:
                         key = VpnKey.objects.filter(user=user, server__country__name='poland').last().key
@@ -83,31 +85,40 @@ async def callback_query_handlers(call):
                         await bot.send_message(call.message.chat.id, text=msg.no_key_avail,
                                                reply_markup=markup.get_subscription())
                 elif 'russia' in data:
-                    if 'russia' in countries:
-                        try:
-                            key = VpnKey.objects.filter(user=user, server__country__name='russia').last().key
-                        except:
-                            try:
-                                key = create_new_key( server=Server.objects.filter(country__name='russia', keys_generated__lte=100), user=user)
-                            except:
-                                await bot.send_message(call.message.chat.id, text=f'{traceback.format_exc()}')
-
+                    try:
+                        key = VpnKey.objects.filter(user=user, server__country__name='russia').last().access_url
                         await bot.send_message(call.message.chat.id, msg.key_avail)
                         await bot.send_message(call.message.chat.id, text=f'<code>{key}</code>', reply_markup=markup.key_menu(), parse_mode='HTML')
-                    else:
-                        await bot.send_message(call.message.chat.id, text=msg.no_key_avail,
-                                               reply_markup=markup.get_subscription())
+                    except:
+                        await bot.send_message(call.message.chat.id, text=msg.get_new_key, reply_markup=markup.get_new_key('russia'))
+
+
+                # else:
+                #     await bot.send_message(call.message.chat.id, text=msg.no_key_avail, reply_markup=markup.get_subscription())
             else:
                 await bot.send_message(call.message.chat.id, msg.no_subscription,
                                        reply_markup=markup.get_subscription())
         elif 'account' in data:
 
-            if 'top_up_balance' in data:
+
+            if 'get_new_key' in call.data:
+                try:
+                    country = call.data.split('_')[-1]
+                    key = await create_new_key(
+                        server=Server.objects.filter(country__name=country, keys_generated__lte=100).last(), user=user)
+                    await bot.send_message(call.message.chat.id, msg.key_avail)
+                    await bot.send_message(call.message.chat.id, text=f'<code>{key}</code>', reply_markup=markup.key_menu(), parse_mode='HTML')
+                except:
+                    await bot.send_message(call.message.chat.id, text=f'{traceback.format_exc()}')
+
+
+            elif 'top_up_balance' in data:
                 await bot.send_message(call.message.chat.id, text=msg.paymemt_menu, reply_markup=markup.paymemt_menu())
             elif 'buy_subscripton' in data:
-                await bot.send_message(call.message.chat.id, text=msg.choose_subscription, reply_markup=markup.choose_subscription())
+                await bot.send_message(call.message.chat.id, text=msg.choose_subscription,
+                                       reply_markup=markup.choose_subscription())
 
-            elif 'swap_key' in data:
+            elif 'swap_key' in call.data:
                 await send_dummy()
 
             elif 'payment_1' in data:
@@ -131,7 +142,8 @@ async def callback_query_handlers(call):
             balance = user.balance
             sub = str(user.subscription_expiration) if user.subscription_status else 'Нет подписки'
             reg_date = str(user.join_date)
-            await bot.send_message(call.message.chat.id, text=msg.profile.format(user_id, balance, sub, reg_date), reply_markup=markup.start(), parse_mode='HTML')
+            await bot.send_message(call.message.chat.id, text=msg.profile.format(user_id, balance, sub, reg_date),
+                                   reply_markup=markup.start(), parse_mode='HTML')
         elif 'help' in data:
             await bot.send_message(call.message.chat.id, text=msg.help_message, reply_markup=markup.start(),
                                    parse_mode='HTML')

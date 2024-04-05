@@ -68,10 +68,18 @@ def choose_subscription():
     return markup
 
 
-def key_menu():
+def key_menu(country: str):
     markup = InlineKeyboardMarkup()
-    btn1 = InlineKeyboardButton(text=f'Заменить ключ', callback_data=f'account:swap_key')
+    btn1 = InlineKeyboardButton(text=f'Заменить ключ', callback_data=f'account:swap_key_{country}')
     btn2 = InlineKeyboardButton(text=f'Помощь', callback_data=f'help')
     markup.row(btn1, btn2)
+    markup.row(btn_back)
+    return markup
+
+
+def get_new_key(country: str):
+    markup = InlineKeyboardMarkup()
+    btn1 = InlineKeyboardButton(text=f'Получить новый ключ', callback_data=f'account:get_new_key_{country}')
+    markup.row(btn1)
     markup.row(btn_back)
     return markup

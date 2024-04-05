@@ -12,8 +12,8 @@ data = {"apiUrl": "https://213.171.12.240:61550/pyDHk6tgZk6bnd321tkgXg",
 client = OutlineVPN(api_url=data['apiUrl'],
                     cert_sha256=data['certSha256'])
 # Get all access URLs on the server
-for key in client.get_keys():
-    print(key)
+# for key in client.get_keys():
+#     print(key)
 
 # Create a new key
 # new_key = client.create_key()
@@ -22,7 +22,9 @@ for key in client.get_keys():
 # client.rename_key(new_key.key_id, "new_key")
 
 # Delete it
-# client.delete_key(new_key.key_id)
+for key in client.get_keys():
+    print(key)
+    print(client.delete_key(key.key_id))
 
 # Set a monthly data limit for a key (20MB)
 # client.add_data_limit(new_key.key_id, 1000 * 1000 * 20)

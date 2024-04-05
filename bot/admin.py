@@ -196,7 +196,7 @@ class ServerAdmin(admin.ModelAdmin):
     list_display = (
         'hosting', 'ip_address', 'user', 'password', 'rental_price', 'max_keys', 'keys_generated', 'is_active',
         'created_at')
-
+    inlines = [VpnKeyInline]
 
 @admin.register(Price)
 class PriceAdmin(admin.ModelAdmin):

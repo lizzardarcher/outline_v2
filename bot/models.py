@@ -86,7 +86,7 @@ class Server(models.Model):
     configuration = models.TextField(max_length=1000, blank=True, null=True, verbose_name='Configuration')
     rental_price = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Rental Price')
     max_keys = models.IntegerField(blank=True, null=True, verbose_name='Max Keys')
-    keys_generated = models.IntegerField(blank=True, null=True, verbose_name='Keys')
+    keys_generated = models.IntegerField(blank=True, null=True, verbose_name='Keys generated')
     is_active = models.BooleanField(default=True, verbose_name='Active')
     created_at = models.DateField(auto_now_add=True, verbose_name='Timestamp')
 

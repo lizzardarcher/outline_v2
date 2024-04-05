@@ -1,3 +1,5 @@
+import traceback
+
 from outline_vpn.outline_vpn import OutlineVPN
 import django_orm
 from bot.models import VpnKey
@@ -6,38 +8,57 @@ from bot.models import TelegramUser
 from bot.models import GlobalSettings
 
 
-# Setup the access with the API URL (Use the one provided to you after the server setup)
-
 # Get all access URLs on the server
 # for key in client.get_keys():
 #     print(key)
-'''
-1GB = 1024 * 1024 * 1024
-'''
 
-def create_new_key(server: Server, user: TelegramUser) -> str:
-    data_limit = GlobalSettings.objects.all()[0].data_limit
-    data_limit = data_limit * 1024 * 1024 * 1024
-    data = dict(server.script_out)
-    client = OutlineVPN(api_url=data['apiUrl'], cert_sha256=data['certSha256'])
-    key = client.create_key(
-        key_id=f'{str(user.user_id)}:{str(server.id)}',
-        name=f'{str(user.user_id)}+ {server.ip_address}',
-        data_limit=data_limit
-    )
-    VpnKey.objects.create(
-        server=server,
-        user=user,
-        key_id=f'{key.key_id}:{server.ip_address}',
-        name=key.name,
-        password=key.password,
-        port=key.port,
-        method=key.method,
-        access_url=key.access_url,
-        used_bytes=key.used_bytes,
-        data_limit=key.data_limit
-    )
-    return key.access_url
+
+async def create_new_key(server: Server, user: TelegramUser) -> str:
+    try:
+        """
+        Создать новый vpn ключ
+        :param server: Server from models
+        :param user: TelegramUser from models
+        :return: access_url
+        """
+        data_limit = None
+        try:
+            data_limit = GlobalSettings.objects.all()[0].data_limit
+            data_limit = data_limit * 1024 * 1024 * 1024
+        except:
+            print('no data_limit provided')
+        data = dict(server.script_out)
+        client = OutlineVPN(api_url=data['apiUrl'], cert_sha256=data['certSha256'])
+        key = client.create_key(
+            key_id=f'{str(user.user_id)}:{str(server.id)}',
+            name=f'{str(user.user_id)}:{server.ip_address}',
+            data_limit=data_limit
+        )
+        VpnKey.objects.create(
+            server=server,
+            user=user,
+            key_id=f'{key.key_id}',
+            name=key.name,
+            password=key.password,
+            port=key.port,
+            method=key.method,
+            access_url=key.access_url,
+            used_bytes=key.used_bytes,
+            data_limit=key.data_limit
+        )
+        """
+        Добавляется запись об увеличении кол-ва сгенерированных ключей на +1
+        """
+        try:
+            keys_generated = Server.objects.filter(id=server.id).first().keys_generated + 1
+            print(keys_generated, 'keys_generated')
+            g = Server.objects.filter(id=server.id).update(keys_generated=keys_generated)
+            print(g, 'g')
+        except:
+            print(traceback.format_exc())
+        return key.access_url
+    except:
+        print(traceback.format_exc())
 
 # Create a new key
 # new_key = client.create_key()
