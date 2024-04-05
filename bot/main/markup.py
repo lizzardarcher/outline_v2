@@ -26,15 +26,11 @@ def back():
 
 def get_avail_location():
     markup = InlineKeyboardMarkup()
-    btn1 = InlineKeyboardButton(text=f'Нидерланды 🇳🇱', callback_data=f'country:netherland')
-    btn2 = InlineKeyboardButton(text=f'Польша 🇵🇱', callback_data=f'country:poland')
-    btn3 = InlineKeyboardButton(text=f'Казахстан 🇰🇿', callback_data=f'country:kazakhstan')
-    btn4 = InlineKeyboardButton(text=f'Россия 🇷🇺', callback_data=f'country:russia')
-    markup.row(btn1)
-    markup.row(btn2)
-    markup.row(btn3)
-    markup.row(btn4)
-    markup.row(btn_back)
+    # markup.add(InlineKeyboardButton(text=f'Нидерланды 🇳🇱', callback_data=f'country:netherland'))
+    # markup.add(InlineKeyboardButton(text=f'Польша 🇵🇱', callback_data=f'country:poland'))
+    # markup.add(InlineKeyboardButton(text=f'Казахстан 🇰🇿', callback_data=f'country:kazakhstan'))
+    markup.add(InlineKeyboardButton(text=f'Россия 🇷🇺', callback_data=f'country:russia'))
+    markup.add(btn_back)
     return markup
 
 
@@ -43,6 +39,17 @@ def get_subscription():
     btn1 = InlineKeyboardButton(text=f'Пополнить баланс', callback_data=f'account:top_up_balance')
     btn2 = InlineKeyboardButton(text=f'Купить подписку', callback_data=f'account:buy_subscripton')
     btn3 = InlineKeyboardButton(text=f'Помощь', callback_data=f'popup_help')
+    markup.row(btn1, btn2)
+    markup.row(btn3)
+    markup.row(btn_back)
+    return markup
+
+
+def my_profile():
+    markup = InlineKeyboardMarkup()
+    btn1 = InlineKeyboardButton(text=f'Пополнить баланс', callback_data=f'account:top_up_balance')
+    btn2 = InlineKeyboardButton(text=f'Купить подписку', callback_data=f'account:buy_subscripton')
+    btn3 = InlineKeyboardButton(text=f'Реферальная программа', callback_data=f'referral')
     markup.row(btn1, btn2)
     markup.row(btn3)
     markup.row(btn_back)

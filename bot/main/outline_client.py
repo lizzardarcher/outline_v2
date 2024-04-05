@@ -60,6 +60,38 @@ async def create_new_key(server: Server, user: TelegramUser) -> str:
     except:
         print(traceback.format_exc())
 
+
+# todo решить вопрос с большим количеством серверов идёт запрос на удаление по всем серверам
+# todo нужно сделать проходжение только по тем серверам, где имеются ключи для удаления
+async def delete_all_keys(user: TelegramUser) -> bool:
+    """
+    Delete all vpn-keys associated with user
+    :param user: TelegramUser from models
+    :return: True if deletion was successful, False otherwise
+    """
+    print('deleting all vpn-keys for user', user.id )
+    try:
+        servers = [data.script_out for data in Server.objects.all()]
+        print('server data', servers)
+        keys = [key.key_id for key in VpnKey.objects.filter(user=user)]
+        print('keys data', keys)
+        for data in servers:
+            client = OutlineVPN(api_url=data['apiUrl'], cert_sha256=data['certSha256'])
+            for key in keys:
+                try:
+                    print('Удаляем Ключ :: ', key)
+                    client.delete_key(key)
+                    keys.remove(key)
+                    print('Ключ Успешно Удалён :: ', key)
+                except:
+                    ...
+        VpnKey.objects.filter(user=user).delete()
+        return True
+    except Exception as e:
+        print(traceback.format_exc())
+        return False
+
+
 # Create a new key
 # new_key = client.create_key()
 # print(new_key)
