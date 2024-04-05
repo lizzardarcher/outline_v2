@@ -1,33 +1,35 @@
 import traceback
 
+from django.conf import settings
+
 from outline_vpn.outline_vpn import OutlineVPN
 import django_orm
 from bot.models import VpnKey
 from bot.models import Server
 from bot.models import TelegramUser
 
+DEBUG = settings.DEBUG
+
 
 async def update_keys_data_limit(user: TelegramUser):
     try:
-        servers = [data.script_out for data in Server.objects.all()]
+        data = VpnKey.objects.filter(user=user).first().server.script_out
+        client = OutlineVPN(api_url=data['apiUrl'], cert_sha256=data['certSha256'])
+        if DEBUG: print(data)
 
-        for data in servers:
-            client = OutlineVPN(api_url=data['apiUrl'], cert_sha256=data['certSha256'])
+        #  Обновляем запись в ключе
+        key_id = VpnKey.objects.filter(user=user).first().key_id
+        used_bytes = client.get_transferred_data()['bytesTransferredByUserId'][key_id]
+        VpnKey.objects.filter(user=user).update(used_bytes=used_bytes)
+        if DEBUG: print(key_id, used_bytes)
 
-            key = client.get_keys()[0]
-            VpnKey.objects.filter(key_id=key.key_id).update(used_bytes=key.used_bytes)
-            print(key)
-            print(user)
-            print(user.data_limit)
-            if not key.used_bytes:
-                key.used_bytes = 0
-            if key.used_bytes > 300000000:
-                data_limit = int(user.data_limit) - int(key.used_bytes)
-                TelegramUser.objects.filter(user_id=user.user_id).update(data_limit=data_limit)
+        #  Обновляем data_limit у пользователя
+        data_limit = int(user.data_limit) - int(used_bytes)
+        TelegramUser.objects.filter(user_id=user.user_id).update(data_limit=data_limit)
+        if DEBUG: print(data_limit)
 
-            print(key.used_bytes, key.key_id)
     except:
-        print(traceback.format_exc())
+        if DEBUG: print(traceback.format_exc())
 
 
 async def create_new_key(server: Server, user: TelegramUser) -> str:
@@ -68,9 +70,9 @@ async def create_new_key(server: Server, user: TelegramUser) -> str:
         """
         try:
             keys_generated = Server.objects.filter(id=server.id).first().keys_generated + 1
-            print(keys_generated, 'keys_generated')
+            if DEBUG: print(keys_generated, 'keys_generated')
             g = Server.objects.filter(id=server.id).update(keys_generated=keys_generated)
-            print(g, 'g')
+            if DEBUG: print(g, 'g')
         except:
             print(traceback.format_exc())
         return key.access_url
@@ -86,27 +88,30 @@ async def delete_user_keys(user: TelegramUser) -> bool:
     :param user: TelegramUser from models
     :return: True if deletion was successful, False otherwise
     """
-    print('deleting all vpn-keys for user', user.id)
+    if DEBUG: print('deleting all vpn-keys for user', user.id)
     try:
         servers = [data.script_out for data in Server.objects.all()]
-        print('server data', servers)
+        if DEBUG: print('server data', servers)
         keys = [key.key_id for key in VpnKey.objects.filter(user=user)]
-        print('keys data', keys)
+        used_bytes = VpnKey.objects.filter(user=user).first().used_bytes
+        data_limit = int(user.data_limit) - int(used_bytes)
+        TelegramUser.objects.filter(user_id=user.user_id).update(data_limit=data_limit)
+        if DEBUG: print('keys data', keys)
         for data in servers:
             client = OutlineVPN(api_url=data['apiUrl'], cert_sha256=data['certSha256'])
             for key in keys:
                 try:
-                    print('Удаляем Ключ :: ', key)
+                    if DEBUG: print('Удаляем Ключ :: ', key)
                     client.delete_key(key)
                     keys.remove(key)
-                    print('Ключ Успешно Удалён :: ', key)
+                    if DEBUG: print('Ключ Успешно Удалён :: ', key)
 
                     """
                         Добавляется запись об уменьшении кол-ва сгенерированных ключей на -1
                     """
                     try:
                         keys_generated = Server.objects.filter(script_out=data).first().keys_generated - 1
-                        print(keys_generated, 'keys_generated')
+                        if DEBUG: print(keys_generated, 'keys_generated')
                         Server.objects.filter(script_out=data).update(keys_generated=keys_generated)
                     except:
                         print(traceback.format_exc())
@@ -118,7 +123,6 @@ async def delete_user_keys(user: TelegramUser) -> bool:
     except Exception as e:
         print(traceback.format_exc())
         return False
-
 
 # Create a new key
 # new_key = client.create_key()

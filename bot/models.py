@@ -13,7 +13,7 @@ class TelegramUser(models.Model):
     subscription_status = models.BooleanField(default=False, verbose_name='Subscription status')
     subscription_expiration = models.DateField(default=None, blank=True, null=True,
                                                verbose_name='Subscription expiration')
-    data_limit = models.BigIntegerField(verbose_name='Data Limit', blank=True, null=True)
+    data_limit = models.BigIntegerField(verbose_name='Data Limit', blank=True, null=True, default=0)
 
     def __str__(self):
         return f"{self.first_name} {self.last_name} ({self.username})"
