@@ -11,7 +11,22 @@ from bot.models import GlobalSettings
 # Get all access URLs on the server
 # for key in client.get_keys():
 #     print(key)
+def update_keys_data_limit(user: TelegramUser):
+    try:
+        servers = [data.script_out for data in Server.objects.all()]
 
+        for data in servers:
+            client = OutlineVPN(api_url=data['apiUrl'], cert_sha256=data['certSha256'])
+
+            for key in client.get_keys():
+                VpnKey.objects.filter(key_id=key.key_id).update(used_bytes=key.used_bytes)
+                data_limit = user.data_limit - key.used_bytes
+                user.update(used_bytes=key.used_bytes)
+                print(key.used_bytes, key.key_id)
+    except:
+        print(traceback.format_exc())
+
+# update_keys_data_limit()
 
 async def create_new_key(server: Server, user: TelegramUser) -> str:
     try:
@@ -23,8 +38,8 @@ async def create_new_key(server: Server, user: TelegramUser) -> str:
         """
         data_limit = None
         try:
-            data_limit = GlobalSettings.objects.all()[0].data_limit
-            data_limit = data_limit * 1024 * 1024 * 1024
+            data_limit = user.data_limit
+            data_limit = data_limit
         except:
             print('no data_limit provided')
         data = dict(server.script_out)
@@ -63,13 +78,13 @@ async def create_new_key(server: Server, user: TelegramUser) -> str:
 
 # todo решить вопрос с большим количеством серверов идёт запрос на удаление по всем серверам
 # todo нужно сделать проходжение только по тем серверам, где имеются ключи для удаления
-async def delete_all_keys(user: TelegramUser) -> bool:
+async def delete_user_keys(user: TelegramUser) -> bool:
     """
     Delete all vpn-keys associated with user
     :param user: TelegramUser from models
     :return: True if deletion was successful, False otherwise
     """
-    print('deleting all vpn-keys for user', user.id )
+    print('deleting all vpn-keys for user', user.id)
     try:
         servers = [data.script_out for data in Server.objects.all()]
         print('server data', servers)
@@ -83,6 +98,17 @@ async def delete_all_keys(user: TelegramUser) -> bool:
                     client.delete_key(key)
                     keys.remove(key)
                     print('Ключ Успешно Удалён :: ', key)
+
+                    """
+                        Добавляется запись об уменьшении кол-ва сгенерированных ключей на -1
+                    """
+                    try:
+                        keys_generated = Server.objects.filter(script_out=data).first().keys_generated - 1
+                        print(keys_generated, 'keys_generated')
+                        Server.objects.filter(script_out=data).update(keys_generated=keys_generated)
+                    except:
+                        print(traceback.format_exc())
+
                 except:
                     ...
         VpnKey.objects.filter(user=user).delete()

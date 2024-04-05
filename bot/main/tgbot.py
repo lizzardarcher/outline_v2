@@ -18,7 +18,7 @@ from bot.main import msg
 from bot.main import markup
 from bot.main.utils import return_matches
 from bot.main.outline_client import create_new_key
-from bot.main.outline_client import delete_all_keys
+from bot.main.outline_client import delete_user_keys
 
 bot = AsyncTeleBot(TelegramBot.objects.get(pk=1).token)
 logging.basicConfig(level=logging.DEBUG)
@@ -44,24 +44,12 @@ async def start(message):
 async def handle_referral(message):
     if message.chat.type == 'private':
         if 'start=' in message.text:
-            new_user_check = True
             referred_by = message.text.split('=')[-1]
-            await bot.send_message(message.chat.id, text=f"Вы были приглашены пользователем с ID: {referred_by}")
-
-            #  Проверяем есть ли пользователь в базе, если уже есть то проходит мимо мимо мимо ... на хер
-            # if DEBUG: print('Проверяем есть ли пользователь в базе, если уже есть то проходит мимо мимо мимо ... на хер')
-            # try:
-            #     TelegramUser.objects.create(user_id=message.from_user.id,
-            #                                 username=message.from_user.username,
-            #                                 first_name=message.from_user.first_name,
-            #                                 last_name=message.from_user.last_name)
-            #     new_user_check = True
-            #     if DEBUG: print('Проверка Пройдена')
-            #
-            # except IntegrityError:
-            #     ...
-            if new_user_check:
+            same_user_check = str(referred_by) == str(message.chat.id)
+            if not same_user_check:
                 try:
+                    await bot.send_message(message.chat.id, text=f"Вы были приглашены пользователем с ID: {referred_by}")
+
                     if DEBUG: print('В попытке создать реферала')
 
                     referrer = TelegramUser.objects.get(user_id=referred_by)  # тот, от кого получена ссылка
@@ -71,12 +59,13 @@ async def handle_referral(message):
                     TelegramReferral.objects.create(referrer=referrer, referred=referred, level=1)
                     if DEBUG: print('Успешно создали реферала 1го уровня')
 
+                    await bot.send_message(chat_id=message.chat.id, text=msg.referral_bond.format(str(referrer), str(referred)))
+
                     #  Проверяем есть ли рефералы у того, кто отправил ссылку и получаем их список, если есть
                     referred_list = [x for x in TelegramReferral.objects.filter(referred=referrer)]
                     if DEBUG: print('referred_list', referred_list)
 
                     for r in referred_list:
-                        print(r)
                         current_level = r.level  # 1
                         current_referrer = r.referrer
                         new_referral = TelegramReferral.objects.create(referrer=current_referrer, referred=referred, level=current_level+1)
@@ -86,6 +75,11 @@ async def handle_referral(message):
                     await bot.send_message(chat_id=message.chat.id, text=msg.main_menu_choice, reply_markup=markup.start())
                 except:
                     print(traceback.format_exc())
+            else:
+                await bot.send_message(chat_id=message.chat.id, text=msg.referral_bond_error)
+                await bot.send_message(chat_id=message.chat.id, text=msg.start_message.format(message.from_user.first_name))
+                await bot.send_message(chat_id=message.chat.id, text=msg.main_menu)
+                await bot.send_message(chat_id=message.chat.id, text=msg.main_menu_choice, reply_markup=markup.start())
 
 
 
@@ -126,7 +120,7 @@ async def callback_query_handlers(call):
             if 'get_new_key' in call.data:
                 try:
                     #  Удаляем все предыдущие ключи
-                    await delete_all_keys(user=user)
+                    await delete_user_keys(user=user)
                     country = call.data.split('_')[-1]
                     key = await create_new_key(
                         server=Server.objects.filter(country__name=country, keys_generated__lte=100).last(), user=user)
@@ -137,7 +131,7 @@ async def callback_query_handlers(call):
             elif 'swap_key' in call.data:
                 try:
                     #  Удаляем все предыдущие ключи
-                    await delete_all_keys(user=user)
+                    await delete_user_keys(user=user)
                     country = call.data.split('_')[-1]
                     key = await create_new_key(
                         server=Server.objects.filter(country__name=country, keys_generated__lte=100).last(), user=user)
