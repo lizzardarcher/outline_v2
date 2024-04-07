@@ -30,6 +30,17 @@ logging.basicConfig(level=logging.DEBUG)
 DEBUG = settings.DEBUG
 
 
+
+@bot.message_handler(commands=['test'])
+async def start(message):
+    if message.chat.type == 'private':
+        user = TelegramUser.objects.get(user_id=message.chat.id)
+        referred_list = [x for x in TelegramReferral.objects.filter(referred=user)]
+        await bot.send_message(message.chat.id, f'{referred_list}')
+        # if referred_list:
+        #     for referrer in referred_list:
+        #         TelegramUser.objects.filter(user_id=referrer.referrer.user_id)
+
 @bot.message_handler(commands=['start'])
 async def start(message):
     if message.chat.type == 'private':
@@ -127,8 +138,7 @@ async def got_payment(message):
     user = TelegramUser.objects.get(user_id=message.chat.id)
     amount = message.successful_payment.total_amount / 100
     currency = message.successful_payment.currency
-    await bot.send_message(chat_id=message.chat.id, text=msg.payment_successful.format(amount, currency),
-                           reply_markup=markup.my_profile())
+    await bot.send_message(chat_id=message.chat.id, text=msg.payment_successful.format(amount, currency), reply_markup=markup.my_profile())
     balance = TelegramUser.objects.get(user_id=message.chat.id).balance + amount
     TelegramUser.objects.filter(user_id=message.chat.id).update(balance=balance)
 
