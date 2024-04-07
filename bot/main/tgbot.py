@@ -16,6 +16,7 @@ from bot.models import VpnKey
 from bot.models import Server
 from bot.models import Country
 from bot.models import IncomeInfo
+from bot.models import ReferralSettings
 
 from bot.main import msg
 from bot.main import markup
@@ -30,16 +31,39 @@ logging.basicConfig(level=logging.DEBUG)
 DEBUG = settings.DEBUG
 
 
-
 @bot.message_handler(commands=['test'])
 async def start(message):
     if message.chat.type == 'private':
         user = TelegramUser.objects.get(user_id=message.chat.id)
+        print(user)
         referred_list = [x for x in TelegramReferral.objects.filter(referred=user)]
-        await bot.send_message(message.chat.id, f'{referred_list}')
-        # if referred_list:
-        #     for referrer in referred_list:
-        #         TelegramUser.objects.filter(user_id=referrer.referrer.user_id)
+        if DEBUG: print('referred_list', referred_list)
+
+        if referred_list:
+            for r in referred_list:
+                users_to_pay = TelegramUser.objects.filter(user_id=r.referrer.user_id)
+                if DEBUG: print('users_to_pay', users_to_pay)
+                level = r.level
+                if DEBUG: print('level', str(level))
+                # for u in users_to_pay:
+                #     percent = None
+                #     if level == 1:
+                #         percent = ReferralSettings.objects.get(pk=1).level_1_percentage
+                #     elif level == 2:
+                #         percent = ReferralSettings.objects.get(pk=1).level_2_percentage
+                #     elif level == 3:
+                #         percent = ReferralSettings.objects.get(pk=1).level_3_percentage
+                #     elif level == 4:
+                #         percent = ReferralSettings.objects.get(pk=1).level_4_percentage
+                #     elif level == 5:
+                #         percent = ReferralSettings.objects.get(pk=1).level_5_percentage
+                #     if percent:
+                #         income = float(TelegramUser.objects.get(user=u.user_id).income) + (
+                #                     amount * float(percent) / 100)
+                #         TelegramUser.objects.filter(user=u.user_id).update(income=income)
+                #         await bot.send_message(message.chat.id,
+                #                                text=msg.income_from_referral.format(str(amount * float(percent) / 100)))
+
 
 @bot.message_handler(commands=['start'])
 async def start(message):
@@ -60,7 +84,7 @@ async def start(message):
         await bot.send_message(chat_id=message.chat.id, text=msg.main_menu_choice, reply_markup=markup.start())
 
 
-@bot.message_handler(regexp='start=')
+@bot.message_handler(content_types=['text'])
 async def handle_referral(message):
     if message.chat.type == 'private':
         if 'start=' in message.text:
@@ -136,22 +160,43 @@ async def checkout(pre_checkout_query):
 async def got_payment(message):
     print(message)
     user = TelegramUser.objects.get(user_id=message.chat.id)
-    amount = message.successful_payment.total_amount / 100
+    amount = float(message.successful_payment.total_amount / 100)
     currency = message.successful_payment.currency
-    await bot.send_message(chat_id=message.chat.id, text=msg.payment_successful.format(amount, currency), reply_markup=markup.my_profile())
-    balance = TelegramUser.objects.get(user_id=message.chat.id).balance + amount
+    await bot.send_message(chat_id=message.chat.id, text=msg.payment_successful.format(amount, currency),
+                           reply_markup=markup.my_profile())
+    balance = float(TelegramUser.objects.get(user_id=message.chat.id).balance) + amount
     TelegramUser.objects.filter(user_id=message.chat.id).update(balance=balance)
 
-    # todo пополнить общий заработок
-    income = IncomeInfo.objects.get(pk=1).total_amount
-    users_balance = IncomeInfo.objects.get(pk=1).user_balance_total
-    IncomeInfo.objects.all().update(income=income + amount, users_balance_total=users_balance + amount)
+    income = float(IncomeInfo.objects.get(pk=1).total_amount)  # Общий доход проекта
+    users_balance = float(IncomeInfo.objects.get(pk=1).user_balance_total)  # Общий баланс всех пользователей
+    IncomeInfo.objects.all().update(total_amount=income + amount, user_balance_total=users_balance + amount)
 
-    # todo распределить средства рефералам
     referred_list = [x for x in TelegramReferral.objects.filter(referred=user)]
+    if DEBUG: print('referred_list', referred_list)
+
     if referred_list:
-        for referrer in referred_list:
-            TelegramUser.objects.filter(user_id=referrer.referrer.user_id)
+        for r in referred_list:
+            user_to_pay = TelegramUser.objects.filter(user_id=r.referrer.user_id)[0]
+            if DEBUG: print('user_to_pay', user_to_pay)
+            level = r.level
+            if DEBUG: print('level', str(level))
+            percent = None
+            if level == 1:
+                percent = ReferralSettings.objects.get(pk=1).level_1_percentage
+            elif level == 2:
+                percent = ReferralSettings.objects.get(pk=1).level_2_percentage
+            elif level == 3:
+                percent = ReferralSettings.objects.get(pk=1).level_3_percentage
+            elif level == 4:
+                percent = ReferralSettings.objects.get(pk=1).level_4_percentage
+            elif level == 5:
+                percent = ReferralSettings.objects.get(pk=1).level_5_percentage
+            if percent:
+                income = float(TelegramUser.objects.get(user_id=user_to_pay.user_id).income) + (amount * float(percent) / 100)
+                TelegramUser.objects.filter(user_id=user_to_pay.user_id).update(income=income)
+                await bot.send_message(user_to_pay.user_id,
+                                       text=msg.income_from_referral.format(str(amount * float(percent) / 100)),
+                                       reply_markup=markup.start())
 
 
 @bot.callback_query_handler(func=lambda call: True)
@@ -246,6 +291,7 @@ async def callback_query_handlers(call):
                         start_parameter=f'some-string-may-be',
                         need_phone_number=True,
                     )
+            # todo списывать деньги со баланса пользователя при приобретении подписки
 
             elif 'sub_1' in data:
                 await send_dummy()
@@ -260,19 +306,21 @@ async def callback_query_handlers(call):
 
 
         # todo  Разобраться с остатками ГБ
+
         elif 'profile' in data:
-            try:
-                await update_keys_data_limit(user=user)
-            except:
-                print(traceback.format_exc())
+            # try:
+            #     await update_keys_data_limit(user=user)
+            # except:
+            #     print(traceback.format_exc())
             user_id = user.user_id
             balance = user.balance
+            income = user.income
             sub = str(user.subscription_expiration) if user.subscription_status else 'Нет подписки'
             reg_date = str(user.join_date)
             data_limit = str(ceil(user.data_limit / (1016 ** 3)))
 
             await bot.send_message(call.message.chat.id,
-                                   text=msg.profile.format(user_id, balance, sub, reg_date),
+                                   text=msg.profile.format(user_id, balance, sub, reg_date, income),
                                    reply_markup=markup.my_profile())
 
         elif 'referral' in data:

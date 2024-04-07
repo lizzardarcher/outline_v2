@@ -20,7 +20,11 @@ class TelegramUser(models.Model):
     withdrawal_listener = models.BooleanField(default=False, verbose_name='Withdrawal listener')
 
     def __str__(self):
-        return f"{self.first_name} {self.last_name} ({self.username})"
+        if self.last_name:
+            return f"{self.first_name} {self.last_name} ({self.username})"
+        else:
+            return f"{self.first_name} ({self.username})"
+
 
     class Meta:
         verbose_name = 'Telegram User'
