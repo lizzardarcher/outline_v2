@@ -58,8 +58,8 @@ def my_profile():
 
 def paymemt_menu():
     markup = InlineKeyboardMarkup()
-    markup.add(InlineKeyboardButton(text=f'Способ 1', callback_data=f'account:payment_1'))
-    markup.add(InlineKeyboardButton(text=f'Способ 2 ', callback_data=f'account:payment_2'))
+    markup.add(InlineKeyboardButton(text=f'Юкасса', callback_data=f'account:payment:ukassa'))
+    markup.add(InlineKeyboardButton(text=f'USDT', callback_data=f'account:payment:usdt'))
     markup.add(btn_back)
     return markup
 
@@ -89,4 +89,10 @@ def get_new_key(country: str):
     btn1 = InlineKeyboardButton(text=f'Получить новый ключ', callback_data=f'account:get_new_key_{country}')
     markup.row(btn1)
     markup.row(btn_back)
+    return markup
+
+
+def payment(price: int, chat_id: int):
+    markup = InlineKeyboardMarkup()
+    markup.add(InlineKeyboardButton(text="Оплатить", callback_data=f'payment_{price}_{chat_id}'))
     return markup

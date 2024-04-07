@@ -35,6 +35,7 @@ async def start(message):
                                         username=message.from_user.username,
                                         first_name=message.from_user.first_name,
                                         last_name=message.from_user.last_name,
+                                        data_limit=5368709120,  # 5 GB at start
                                         subscription_status=True,
                                         subscription_expiration=datetime.now()+timedelta(days=3))
             await bot.send_message(chat_id=message.chat.id, text=msg.new_user_bonus, parse_mode='HTML')
@@ -102,8 +103,7 @@ async def callback_query_handlers(call):
         await bot.delete_message(call.message.chat.id, call.message.message_id)
 
         if 'manage' in data:
-            await bot.send_message(call.message.chat.id, msg.avail_location_choice,
-                                   reply_markup=markup.get_avail_location())
+            await bot.send_message(call.message.chat.id, msg.avail_location_choice, reply_markup=markup.get_avail_location())
         elif 'country' in data:
             if user.subscription_status:
                 keys = VpnKey.objects.filter(user=user)
@@ -150,10 +150,8 @@ async def callback_query_handlers(call):
                 await bot.send_message(call.message.chat.id, text=msg.choose_subscription,
                                        reply_markup=markup.choose_subscription())
 
-            elif 'payment_1' in data:
-                await send_dummy()
-            elif 'payment_2' in data:
-                await send_dummy()
+            elif 'payment' in data:
+                await bot.send_message(call.message.chat.id, text=msg.top_up_balance)
 
             elif 'sub_1' in data:
                 await send_dummy()
