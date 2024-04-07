@@ -96,5 +96,14 @@ def get_new_key(country: str):
 
 def payment_ukassa(price: int, chat_id: int):
     markup = InlineKeyboardMarkup()
-    markup.add(InlineKeyboardButton(text="Оплатить", callback_data=f'account:payment:details:{str(price)}:{str(chat_id)}'))
+    markup.add(
+        InlineKeyboardButton(text="Оплатить", callback_data=f'account:payment:details:{str(price)}:{str(chat_id)}'))
+    markup.add(btn_back)
+    return markup
+
+
+def withdraw_funds(chat_id: int):
+    markup = InlineKeyboardMarkup()
+    markup.add(InlineKeyboardButton(text="Вывести деньги", callback_data=f'withdraw:{str(chat_id)}'))
+    markup.add(btn_back)
     return markup

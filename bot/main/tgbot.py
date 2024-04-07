@@ -162,8 +162,8 @@ async def got_payment(message):
     user = TelegramUser.objects.get(user_id=message.chat.id)
     amount = float(message.successful_payment.total_amount / 100)
     currency = message.successful_payment.currency
-    await bot.send_message(chat_id=message.chat.id, text=msg.payment_successful.format(amount, currency),
-                           reply_markup=markup.my_profile())
+    await bot.send_message(chat_id=message.chat.id, text=msg.payment_successful.format(amount, currency))
+    await bot.send_message(chat_id=message.chat.id, text=msg.main_menu_choice, reply_markup=markup.start())
     balance = float(TelegramUser.objects.get(user_id=message.chat.id).balance) + amount
     TelegramUser.objects.filter(user_id=message.chat.id).update(balance=balance)
 
@@ -325,9 +325,14 @@ async def callback_query_handlers(call):
 
         elif 'referral' in data:
             bot_username = TelegramBot.objects.get(pk=1).username
+            user_income = TelegramUser.objects.get(user_id=call.message.chat.id).income
             referral_code = call.message.chat.id
-            referral_link = f"Твоя реферальная ссылка: https://t.me/{bot_username}?start={referral_code}"
-            await bot.send_message(call.message.chat.id, text=referral_link, reply_markup=markup.my_profile())
+            referral_link = f"Твоя реферальная ссылка: <code>https://t.me/{bot_username}?start={referral_code}</code>"
+            await bot.send_message(call.message.chat.id, text=referral_link)
+            await bot.send_message(call.message.chat.id, text=msg.withdraw_funds.format(user_income),
+                                   reply_markup=markup.withdraw_funds(call.message.chat.id))
+        elif 'withdraw' in data:
+            await send_dummy()
 
         elif 'help' in data:
             await bot.send_message(call.message.chat.id, text=msg.help_message, reply_markup=markup.start(),
