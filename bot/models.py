@@ -15,6 +15,9 @@ class TelegramUser(models.Model):
                                                verbose_name='Subscription expiration')
     data_limit = models.BigIntegerField(verbose_name='Data Limit', blank=True, null=True, default=0)
 
+    top_up_balance_listener = models.BooleanField(default=False, verbose_name='Top up balance listener')
+    withdrawal_listener = models.BooleanField(default=False, verbose_name='Withdrawal listener')
+
     def __str__(self):
         return f"{self.first_name} {self.last_name} ({self.username})"
 

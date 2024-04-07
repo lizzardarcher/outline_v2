@@ -23,6 +23,7 @@ from bot.main.outline_client import delete_user_keys
 from bot.main.outline_client import update_keys_data_limit
 
 bot = AsyncTeleBot(TelegramBot.objects.get(pk=1).token)
+bot.parse_mode = 'HTML'
 logging.basicConfig(level=logging.DEBUG)
 DEBUG = settings.DEBUG
 
@@ -37,8 +38,8 @@ async def start(message):
                                         last_name=message.from_user.last_name,
                                         data_limit=5368709120,  # 5 GB at start
                                         subscription_status=True,
-                                        subscription_expiration=datetime.now()+timedelta(days=3))
-            await bot.send_message(chat_id=message.chat.id, text=msg.new_user_bonus, parse_mode='HTML')
+                                        subscription_expiration=datetime.now() + timedelta(days=3))
+            await bot.send_message(chat_id=message.chat.id, text=msg.new_user_bonus)
         except:
             ...
         await bot.send_message(chat_id=message.chat.id, text=msg.start_message.format(message.from_user.first_name))
@@ -54,7 +55,8 @@ async def handle_referral(message):
             same_user_check = str(referred_by) == str(message.chat.id)
             if not same_user_check:
                 try:
-                    await bot.send_message(message.chat.id, text=f"Вы были приглашены пользователем с ID: {referred_by}")
+                    await bot.send_message(message.chat.id,
+                                           text=f"Вы были приглашены пользователем с ID: {referred_by}")
 
                     if DEBUG: print('В попытке создать реферала')
 
@@ -65,7 +67,8 @@ async def handle_referral(message):
                     TelegramReferral.objects.create(referrer=referrer, referred=referred, level=1)
                     if DEBUG: print('Успешно создали реферала 1го уровня')
 
-                    await bot.send_message(chat_id=message.chat.id, text=msg.referral_bond.format(str(referrer), str(referred)))
+                    await bot.send_message(chat_id=message.chat.id,
+                                           text=msg.referral_bond.format(str(referrer), str(referred)))
 
                     #  Проверяем есть ли рефералы у того, кто отправил ссылку и получаем их список, если есть
                     referred_list = [x for x in TelegramReferral.objects.filter(referred=referrer, level__lte=4)]
@@ -74,19 +77,38 @@ async def handle_referral(message):
                     for r in referred_list:
                         current_level = r.level  # 1
                         current_referrer = r.referrer
-                        new_referral = TelegramReferral.objects.create(referrer=current_referrer, referred=referred, level=current_level+1)
+                        new_referral = TelegramReferral.objects.create(referrer=current_referrer, referred=referred,
+                                                                       level=current_level + 1)
                         if DEBUG: print('Создана новая реферальная связь', new_referral)
-                    await bot.send_message(chat_id=message.chat.id, text=msg.start_message.format(message.from_user.first_name))
+                    await bot.send_message(chat_id=message.chat.id,
+                                           text=msg.start_message.format(message.from_user.first_name))
                     await bot.send_message(chat_id=message.chat.id, text=msg.main_menu)
-                    await bot.send_message(chat_id=message.chat.id, text=msg.main_menu_choice, reply_markup=markup.start())
+                    await bot.send_message(chat_id=message.chat.id, text=msg.main_menu_choice,
+                                           reply_markup=markup.start())
                 except:
                     print(traceback.format_exc())
             else:
                 await bot.send_message(chat_id=message.chat.id, text=msg.referral_bond_error)
-                await bot.send_message(chat_id=message.chat.id, text=msg.start_message.format(message.from_user.first_name))
+                await bot.send_message(chat_id=message.chat.id,
+                                       text=msg.start_message.format(message.from_user.first_name))
                 await bot.send_message(chat_id=message.chat.id, text=msg.main_menu)
                 await bot.send_message(chat_id=message.chat.id, text=msg.main_menu_choice, reply_markup=markup.start())
+        else:
+            user = TelegramUser.objects.get(user_id=message.chat.id)
+            if user.top_up_balance_listener:
 
+                try:
+                    amount = int(message.text)
+                    if amount >= 150:
+                        await bot.send_message(chat_id=message.chat.id, text=msg.start_payment.format(str(amount)),
+                                               reply_markup=markup.payment(price=amount, chat_id=message.chat.id))
+                    else:
+                        await bot.send_message(chat_id=message.chat.id,
+                                               text=msg.start_payment_error.format(message.text))
+                except:
+                    await bot.send_message(chat_id=message.chat.id, text=msg.start_payment_error.format(message.text),
+                                           parse_mode='HTML')
+                    print(traceback.format_exc())
 
 
 @bot.callback_query_handler(func=lambda call: True)
@@ -103,7 +125,8 @@ async def callback_query_handlers(call):
         await bot.delete_message(call.message.chat.id, call.message.message_id)
 
         if 'manage' in data:
-            await bot.send_message(call.message.chat.id, msg.avail_location_choice, reply_markup=markup.get_avail_location())
+            await bot.send_message(call.message.chat.id, msg.avail_location_choice,
+                                   reply_markup=markup.get_avail_location())
         elif 'country' in data:
             if user.subscription_status:
                 keys = VpnKey.objects.filter(user=user)
@@ -113,12 +136,15 @@ async def callback_query_handlers(call):
                 if country:
                     try:
                         key = VpnKey.objects.filter(user=user, server__country__name=country).last().access_url
-                        await bot.send_message(call.message.chat.id, text=f'{msg.key_avail}:\n<code>{key}</code>', reply_markup=markup.key_menu(country), parse_mode='HTML')
+                        await bot.send_message(call.message.chat.id, text=f'{msg.key_avail}:\n<code>{key}</code>',
+                                               reply_markup=markup.key_menu(country))
                     except:
                         if DEBUG: print(traceback.format_exc())
-                        await bot.send_message(call.message.chat.id, text=msg.get_new_key, reply_markup=markup.get_new_key('russia'))
+                        await bot.send_message(call.message.chat.id, text=msg.get_new_key,
+                                               reply_markup=markup.get_new_key('russia'))
             else:
-                await bot.send_message(call.message.chat.id, msg.no_subscription, reply_markup=markup.get_subscription())
+                await bot.send_message(call.message.chat.id, msg.no_subscription,
+                                       reply_markup=markup.get_subscription())
 
         elif 'account' in data:
 
@@ -129,7 +155,8 @@ async def callback_query_handlers(call):
                     country = call.data.split('_')[-1]
                     key = await create_new_key(
                         server=Server.objects.filter(country__name=country, keys_generated__lte=100).last(), user=user)
-                    await bot.send_message(call.message.chat.id, text=f'{msg.key_avail}:\n<code>{key}</code>', reply_markup=markup.key_menu(country), parse_mode='HTML')
+                    await bot.send_message(call.message.chat.id, text=f'{msg.key_avail}:\n<code>{key}</code>',
+                                           reply_markup=markup.key_menu(country))
                 except:
                     await bot.send_message(call.message.chat.id, text=f'{traceback.format_exc()}')
 
@@ -137,10 +164,12 @@ async def callback_query_handlers(call):
                 try:
                     #  Удаляем все предыдущие ключи
                     await delete_user_keys(user=user)
+
                     country = call.data.split('_')[-1]
                     key = await create_new_key(
                         server=Server.objects.filter(country__name=country, keys_generated__lte=100).last(), user=user)
-                    await bot.send_message(call.message.chat.id, text=f'{msg.key_avail}:\n<code>{key}</code>', reply_markup=markup.key_menu(country), parse_mode='HTML')
+                    await bot.send_message(call.message.chat.id, text=f'{msg.key_avail}:\n<code>{key}</code>',
+                                           reply_markup=markup.key_menu(country))
                 except:
                     await bot.send_message(call.message.chat.id, text=f'{traceback.format_exc()}')
 
@@ -152,7 +181,7 @@ async def callback_query_handlers(call):
 
             elif 'payment' in data:
                 await bot.send_message(call.message.chat.id, text=msg.top_up_balance)
-
+                TelegramUser.objects.filter(user_id=user.id).update(top_up_balance_listener=True)
             elif 'sub_1' in data:
                 await send_dummy()
             elif 'sub_2' in data:
@@ -170,10 +199,11 @@ async def callback_query_handlers(call):
             balance = user.balance
             sub = str(user.subscription_expiration) if user.subscription_status else 'Нет подписки'
             reg_date = str(user.join_date)
-            data_limit = str(ceil(user.data_limit/(1016**3)))
+            data_limit = str(ceil(user.data_limit / (1016 ** 3)))
 
-            await bot.send_message(call.message.chat.id, text=msg.profile.format(user_id, balance, sub, reg_date, data_limit),
-                                   reply_markup=markup.my_profile(), parse_mode='HTML')
+            await bot.send_message(call.message.chat.id,
+                                   text=msg.profile.format(user_id, balance, sub, reg_date, data_limit),
+                                   reply_markup=markup.my_profile())
 
         elif 'referral' in data:
             bot_username = TelegramBot.objects.get(pk=1).username
