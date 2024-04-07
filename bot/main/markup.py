@@ -1,5 +1,7 @@
 from telebot.types import InlineKeyboardMarkup
 from telebot.types import InlineKeyboardButton
+from telebot.types import LabeledPrice
+from telebot.types import ShippingOption
 
 # from bot.models import *
 
@@ -92,7 +94,7 @@ def get_new_key(country: str):
     return markup
 
 
-def payment(price: int, chat_id: int):
+def payment_ukassa(price: int, chat_id: int):
     markup = InlineKeyboardMarkup()
-    markup.add(InlineKeyboardButton(text="Оплатить", callback_data=f'payment_{price}_{chat_id}'))
+    markup.add(InlineKeyboardButton(text="Оплатить", callback_data=f'account:payment:details:{str(price)}:{str(chat_id)}'))
     return markup

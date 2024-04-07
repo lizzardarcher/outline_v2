@@ -10,6 +10,7 @@ class TelegramUser(models.Model):
 
     is_banned = models.BooleanField(default=False, verbose_name='Is Banned')
     balance = models.DecimalField(max_digits=10, decimal_places=2, default=0.00, verbose_name='Balance')
+    income = models.DecimalField(max_digits=10, decimal_places=2, default=0.00, verbose_name='Income from referral program')
     subscription_status = models.BooleanField(default=False, verbose_name='Subscription status')
     subscription_expiration = models.DateField(default=None, blank=True, null=True,
                                                verbose_name='Subscription expiration')

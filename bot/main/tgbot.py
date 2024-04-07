@@ -6,6 +6,7 @@ from datetime import datetime, timedelta, date
 
 from django.conf import settings
 from telebot.async_telebot import AsyncTeleBot
+from telebot.types import LabeledPrice
 
 import django_orm
 from bot.models import TelegramBot
@@ -14,6 +15,7 @@ from bot.models import TelegramReferral
 from bot.models import VpnKey
 from bot.models import Server
 from bot.models import Country
+from bot.models import IncomeInfo
 
 from bot.main import msg
 from bot.main import markup
@@ -47,7 +49,7 @@ async def start(message):
         await bot.send_message(chat_id=message.chat.id, text=msg.main_menu_choice, reply_markup=markup.start())
 
 
-@bot.message_handler(func=lambda message: True)
+@bot.message_handler(regexp='start=')
 async def handle_referral(message):
     if message.chat.type == 'private':
         if 'start=' in message.text:
@@ -68,7 +70,7 @@ async def handle_referral(message):
                     if DEBUG: print('Успешно создали реферала 1го уровня')
 
                     await bot.send_message(chat_id=message.chat.id,
-                                           text=msg.referral_bond.format(str(referrer), str(referred)))
+                                           text=msg.referral_bond.format(str(referrer.user_id), str(referred.user_id)))
 
                     #  Проверяем есть ли рефералы у того, кто отправил ссылку и получаем их список, если есть
                     referred_list = [x for x in TelegramReferral.objects.filter(referred=referrer, level__lte=4)]
@@ -101,14 +103,45 @@ async def handle_referral(message):
                     amount = int(message.text)
                     if amount >= 150:
                         await bot.send_message(chat_id=message.chat.id, text=msg.start_payment.format(str(amount)),
-                                               reply_markup=markup.payment(price=amount, chat_id=message.chat.id))
+                                               reply_markup=markup.payment_ukassa(price=amount,
+                                                                                  chat_id=message.chat.id))
+                        TelegramUser.objects.filter(user_id=message.chat.id).update(top_up_balance_listener=False)
                     else:
                         await bot.send_message(chat_id=message.chat.id,
-                                               text=msg.start_payment_error.format(message.text))
+                                               text=msg.start_payment_error.format(message.text),
+                                               reply_markup=markup.back())
                 except:
                     await bot.send_message(chat_id=message.chat.id, text=msg.start_payment_error.format(message.text),
-                                           parse_mode='HTML')
+                                           reply_markup=markup.back())
                     print(traceback.format_exc())
+
+
+@bot.pre_checkout_query_handler(func=lambda query: True)
+async def checkout(pre_checkout_query):
+    await bot.answer_pre_checkout_query(pre_checkout_query.id, ok=True, error_message=msg.payment_unsuccessful)
+
+
+@bot.message_handler(content_types=['successful_payment'])
+async def got_payment(message):
+    print(message)
+    user = TelegramUser.objects.get(user_id=message.chat.id)
+    amount = message.successful_payment.total_amount / 100
+    currency = message.successful_payment.currency
+    await bot.send_message(chat_id=message.chat.id, text=msg.payment_successful.format(amount, currency),
+                           reply_markup=markup.my_profile())
+    balance = TelegramUser.objects.get(user_id=message.chat.id).balance + amount
+    TelegramUser.objects.filter(user_id=message.chat.id).update(balance=balance)
+
+    # todo пополнить общий заработок
+    income = IncomeInfo.objects.get(pk=1).total_amount
+    users_balance = IncomeInfo.objects.get(pk=1).user_balance_total
+    IncomeInfo.objects.all().update(income=income + amount, users_balance_total=users_balance + amount)
+
+    # todo распределить средства рефералам
+    referred_list = [x for x in TelegramReferral.objects.filter(referred=user)]
+    if referred_list:
+        for referrer in referred_list:
+            TelegramUser.objects.filter(user_id=referrer.referrer.user_id)
 
 
 @bot.callback_query_handler(func=lambda call: True)
@@ -180,8 +213,30 @@ async def callback_query_handlers(call):
                                        reply_markup=markup.choose_subscription())
 
             elif 'payment' in data:
-                await bot.send_message(call.message.chat.id, text=msg.top_up_balance)
-                TelegramUser.objects.filter(user_id=user.id).update(top_up_balance_listener=True)
+                if 'ukassa' in data:
+                    await bot.send_message(call.message.chat.id, text=msg.top_up_balance)
+                    TelegramUser.objects.filter(user_id=user.user_id).update(top_up_balance_listener=True)
+                elif 'details' in data:
+                    price = LabeledPrice(label='test', amount=int(data[-2]) * 100)
+                    print(price)
+                    await bot.send_invoice(
+                        chat_id=call.message.chat.id,
+                        title='Outline VPN Key',
+                        description='Пополнение баланса для генерации ключей Outline VPN',
+                        invoice_payload=f'{str(user.user_id)}:{data[-2]}',
+                        provider_token='381764678:TEST:82102',
+                        currency='RUB',
+                        prices=[price],
+                        photo_url='https://bitlaunch.io/blog/content/images/size/w2000/2022/10/Outline-VPN.png',
+                        photo_height=512,  # !=0/None or picture won't be shown
+                        photo_width=512,
+                        photo_size=512,
+                        is_flexible=False,
+                        # start_parameter=f'{str(hash(str(user.user_id*data[-2])))}',
+                        start_parameter=f'some-string-may-be',
+                        need_phone_number=True,
+                    )
+
             elif 'sub_1' in data:
                 await send_dummy()
             elif 'sub_2' in data:
@@ -193,8 +248,13 @@ async def callback_query_handlers(call):
             elif 'sub_5' in data:
                 await send_dummy()
 
+
+        # todo  Разобраться с остатками ГБ
         elif 'profile' in data:
-            await update_keys_data_limit(user=user)
+            try:
+                await update_keys_data_limit(user=user)
+            except:
+                print(traceback.format_exc())
             user_id = user.user_id
             balance = user.balance
             sub = str(user.subscription_expiration) if user.subscription_status else 'Нет подписки'
@@ -202,7 +262,7 @@ async def callback_query_handlers(call):
             data_limit = str(ceil(user.data_limit / (1016 ** 3)))
 
             await bot.send_message(call.message.chat.id,
-                                   text=msg.profile.format(user_id, balance, sub, reg_date, data_limit),
+                                   text=msg.profile.format(user_id, balance, sub, reg_date),
                                    reply_markup=markup.my_profile())
 
         elif 'referral' in data:
@@ -214,8 +274,10 @@ async def callback_query_handlers(call):
         elif 'help' in data:
             await bot.send_message(call.message.chat.id, text=msg.help_message, reply_markup=markup.start(),
                                    parse_mode='HTML')
+
         elif 'popup_help' in data:
             await bot.answer_callback_query(call.id, text=msg.popup_help, show_alert=True)
+
         elif 'common_info' in data:
 
             await bot.send_message(call.message.chat.id, text=msg.commom_info, reply_markup=markup.back())
