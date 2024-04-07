@@ -80,8 +80,6 @@ async def create_new_key(server: Server, user: TelegramUser) -> str:
         print(traceback.format_exc())
 
 
-# todo решить вопрос с большим количеством серверов идёт запрос на удаление по всем серверам
-# todo нужно сделать проходжение только по тем серверам, где имеются ключи для удаления
 async def delete_user_keys(user: TelegramUser) -> bool:
     """
     Delete all vpn-keys associated with user
@@ -90,7 +88,8 @@ async def delete_user_keys(user: TelegramUser) -> bool:
     """
     if DEBUG: print('deleting all vpn-keys for user', user.id)
     try:
-        servers = [data.script_out for data in Server.objects.all()]
+        servers = [x.server.script_out for x in VpnKey.objects.filter(user=user)]
+        # servers = [data.script_out for data in Server.objects.all()]
         if DEBUG: print('server data', servers)
         keys = [key.key_id for key in VpnKey.objects.filter(user=user)]
         used_bytes = VpnKey.objects.filter(user=user).first().used_bytes
@@ -106,10 +105,8 @@ async def delete_user_keys(user: TelegramUser) -> bool:
                     keys.remove(key)
                     if DEBUG: print('Ключ Успешно Удалён :: ', key)
 
-                    """
-                        Добавляется запись об уменьшении кол-ва сгенерированных ключей на -1
-                    """
                     try:
+                        #  Добавляется запись об уменьшении кол-ва сгенерированных ключей на -1
                         keys_generated = Server.objects.filter(script_out=data).first().keys_generated - 1
                         if DEBUG: print(keys_generated, 'keys_generated')
                         Server.objects.filter(script_out=data).update(keys_generated=keys_generated)

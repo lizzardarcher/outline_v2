@@ -2,6 +2,7 @@ import asyncio
 import logging
 import traceback
 from math import ceil
+from datetime import datetime, timedelta, date
 
 from django.conf import settings
 from telebot.async_telebot import AsyncTeleBot
@@ -33,11 +34,14 @@ async def start(message):
             TelegramUser.objects.create(user_id=message.from_user.id,
                                         username=message.from_user.username,
                                         first_name=message.from_user.first_name,
-                                        last_name=message.from_user.last_name)
+                                        last_name=message.from_user.last_name,
+                                        subscription_status=True,
+                                        subscription_expiration=datetime.now()+timedelta(days=3))
+            await bot.send_message(chat_id=message.chat.id, text=msg.new_user_bonus, parse_mode='HTML')
         except:
             ...
         await bot.send_message(chat_id=message.chat.id, text=msg.start_message.format(message.from_user.first_name))
-        await bot.send_message(chat_id=message.chat.id, text=msg.main_menu)
+        # await bot.send_message(chat_id=message.chat.id, text=msg.main_menu)
         await bot.send_message(chat_id=message.chat.id, text=msg.main_menu_choice, reply_markup=markup.start())
 
 
@@ -63,7 +67,7 @@ async def handle_referral(message):
                     await bot.send_message(chat_id=message.chat.id, text=msg.referral_bond.format(str(referrer), str(referred)))
 
                     #  Проверяем есть ли рефералы у того, кто отправил ссылку и получаем их список, если есть
-                    referred_list = [x for x in TelegramReferral.objects.filter(referred=referrer)]
+                    referred_list = [x for x in TelegramReferral.objects.filter(referred=referrer, level__lte=4)]
                     if DEBUG: print('referred_list', referred_list)
 
                     for r in referred_list:
