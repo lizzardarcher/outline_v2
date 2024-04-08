@@ -92,7 +92,7 @@ class Server(models.Model):
     ip_address = models.CharField(max_length=1000, blank=True, null=True, verbose_name='IP Address')
     user = models.CharField(max_length=1000, blank=True, null=True, default='root', verbose_name='user')
     password = models.CharField(max_length=1000, blank=True, null=True, default='<PASSWORD>', verbose_name='password')
-    configuration = models.TextField(max_length=1000, blank=True, null=True, verbose_name='Configuration')
+    configuration = models.TextField(max_length=10000, blank=True, null=True, verbose_name='Configuration')
     rental_price = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Rental Price')
     max_keys = models.IntegerField(blank=True, null=True, verbose_name='Max Keys')
     keys_generated = models.IntegerField(blank=True, null=True, verbose_name='Keys generated')
@@ -105,12 +105,13 @@ class Server(models.Model):
     country = models.ForeignKey('Country', on_delete=models.CASCADE, null=True, blank=True, verbose_name='Country')
 
     def __str__(self):
-        return f"{self.ip_address} {self.hosting} ({self.created_at})"
+        return f"{self.hosting} root@{self.ip_address} ({self.created_at}) {self.country.name}"
 
 
 class Country(models.Model):
     name = models.CharField(max_length=100, blank=True, null=True, verbose_name='Name')
     preset_id = models.IntegerField(null=True, blank=True, verbose_name='preset_id')
+    is_active = models.BooleanField(default=True, null=True, blank=True, verbose_name='Активно')
     def __str__(self):
         return f"{self.name}"
 

@@ -229,7 +229,7 @@ async def callback_query_handlers(call):
                     except:
                         if DEBUG: print(traceback.format_exc())
                         await bot.send_message(call.message.chat.id, text=msg.get_new_key,
-                                               reply_markup=markup.get_new_key('russia'))
+                                               reply_markup=markup.get_new_key(country))
             else:
                 await bot.send_message(call.message.chat.id, msg.no_subscription,
                                        reply_markup=markup.get_subscription())
