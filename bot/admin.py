@@ -10,7 +10,6 @@ admin.site.site_header = "Outline VPN Админ Панель"
 admin.site.site_title = "Outline VPN"
 admin.site.index_title = "Добро пожаловать в Outline VPN Админ Панель"
 admin.site.unregister(Group)
-admin.site.register(Country)
 
 
 class WithdrawalRequestInline(admin.TabularInline):
@@ -198,6 +197,7 @@ class ServerAdmin(admin.ModelAdmin):
         'created_at')
     inlines = [VpnKeyInline]
 
+
 @admin.register(Price)
 class PriceAdmin(admin.ModelAdmin):
     def has_add_permission(self, request):
@@ -211,3 +211,9 @@ class PriceAdmin(admin.ModelAdmin):
         if 'delete_selected' in actions:
             del actions['delete_selected']
         return actions
+
+
+@admin.register(Country)
+class CountryAdmin(admin.ModelAdmin):
+    list_display = ('preset_id', 'name')
+    list_display_links = ('preset_id', 'name')

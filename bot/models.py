@@ -110,7 +110,7 @@ class Server(models.Model):
 
 class Country(models.Model):
     name = models.CharField(max_length=100, blank=True, null=True, verbose_name='Name')
-
+    preset_id = models.IntegerField(null=True, blank=True, verbose_name='preset_id')
     def __str__(self):
         return f"{self.name}"
 
@@ -121,10 +121,14 @@ class Country(models.Model):
 
 class GlobalSettings(models.Model):
     server_amount = models.IntegerField(blank=True, null=True, verbose_name='Server Amount')
-    time_web_api_key = models.CharField(max_length=1000, blank=True, null=True, verbose_name='Time Web API')
+    time_web_api_key = models.TextField(max_length=4000, blank=True, null=True, verbose_name='Time Web API Token')
     payment_system_api_key = models.CharField(max_length=1000, blank=True, null=True, verbose_name='Payment System 1')
-    prices = models.ForeignKey(to='Price', on_delete=models.CASCADE, null=True, blank=True, verbose_name='Prices')
+    # prices = models.ForeignKey(to='Price', on_delete=models.CASCADE, null=True, blank=True, verbose_name='Prices')
+    cloud_init = models.TextField(max_length=4000,blank=True, null=True, verbose_name='Cloud Init')
     data_limit = models.BigIntegerField(blank=True, null=True, verbose_name='Data Limit GB')
+    os_id = models.IntegerField(blank=True, null=True,verbose_name='OS id')
+    software_id = models.IntegerField(blank=True, null=True,verbose_name='Software id')
+
     def __str__(self):
         return f"Settings"
 
