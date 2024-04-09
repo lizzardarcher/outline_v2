@@ -294,6 +294,10 @@ async def callback_query_handlers(call):
             # todo списывать деньги со баланса пользователя при приобретении подписки
 
             elif 'sub_1' in data:
+                user_balance = user.balance
+                if user_balance < 150:
+                    await bot.send_message(call.message.chat.id, text=msg.low_balance, reply_markup=markup.top_up_balance())
+
                 await send_dummy()
             elif 'sub_2' in data:
                 await send_dummy()
