@@ -31,6 +31,17 @@ logging.basicConfig(level=logging.DEBUG)
 DEBUG = settings.DEBUG
 
 
+def update_sub_status(user: TelegramUser):
+    exp_date = user.subscription_expiration
+    if exp_date < datetime.now().date():
+        print(f'{exp_date} less than current date {datetime.now().date()}')
+        TelegramUser.objects.filter(user_id=user.user_id).update(subscription_status=False)
+    else:
+        print(f'{exp_date} equal or greater to current date {datetime.now().date()}')
+        TelegramUser.objects.filter(user_id=user.user_id).update(subscription_status=True)
+
+
+
 @bot.message_handler(commands=['test'])
 async def start(message):
     if message.chat.type == 'private':
@@ -87,6 +98,7 @@ async def start(message):
 @bot.message_handler(content_types=['text'])
 async def handle_referral(message):
     if message.chat.type == 'private':
+        update_sub_status(user=TelegramUser.objects.get(user_id=message.chat.id))
         if 'start=' in message.text:
             referred_by = message.text.split('=')[-1]
             same_user_check = str(referred_by) == str(message.chat.id)
@@ -204,6 +216,7 @@ async def got_payment(message):
 async def callback_query_handlers(call):
     data = call.data.split(':')
     user = TelegramUser.objects.get(user_id=call.message.chat.id)
+    update_sub_status(user=user)
     country_list = [x.name for x in Country.objects.all()]
 
     async def send_dummy():
@@ -352,9 +365,14 @@ async def callback_query_handlers(call):
             bot_username = TelegramBot.objects.get(pk=1).username
             user_income = TelegramUser.objects.get(user_id=call.message.chat.id).income
             referral_code = call.message.chat.id
-            referral_link = f"Твоя реферальная ссылка: <code>https://t.me/{bot_username}?start={referral_code}</code>"
-            await bot.send_message(call.message.chat.id, text=referral_link)
-            await bot.send_message(call.message.chat.id, text=msg.withdraw_funds.format(user_income),
+            inv_1_lvl = TelegramReferral.objects.filter(referrer=user, level=1).__len__()
+            inv_2_lvl = TelegramReferral.objects.filter(referrer=user, level=2).__len__()
+            inv_3_lvl = TelegramReferral.objects.filter(referrer=user, level=3).__len__()
+            inv_4_lvl = TelegramReferral.objects.filter(referrer=user, level=4).__len__()
+            inv_5_lvl = TelegramReferral.objects.filter(referrer=user, level=5).__len__()
+            referral_link = f"Твоя реферальная ссылка: <code>https://t.me/{bot_username}?start={referral_code}</code>\n"
+            # await bot.send_message(call.message.chat.id, text=referral_link)
+            await bot.send_message(call.message.chat.id, text=referral_link+ msg.referral.format(inv_1_lvl, inv_2_lvl, inv_3_lvl, inv_4_lvl, inv_5_lvl, user_income),
                                    reply_markup=markup.withdraw_funds(call.message.chat.id))
         elif 'withdraw' in data:
             await send_dummy()
