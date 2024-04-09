@@ -10,7 +10,8 @@ class TelegramUser(models.Model):
 
     is_banned = models.BooleanField(default=False, verbose_name='Is Banned')
     balance = models.DecimalField(max_digits=10, decimal_places=2, default=0.00, verbose_name='Balance')
-    income = models.DecimalField(max_digits=10, decimal_places=2, default=0.00, verbose_name='Income from referral program')
+    income = models.DecimalField(max_digits=10, decimal_places=2, default=0.00,
+                                 verbose_name='Income from referral program')
     subscription_status = models.BooleanField(default=False, verbose_name='Subscription status')
     subscription_expiration = models.DateField(default=None, blank=True, null=True,
                                                verbose_name='Subscription expiration')
@@ -24,7 +25,6 @@ class TelegramUser(models.Model):
             return f"{self.first_name} {self.last_name} ({self.username})"
         else:
             return f"{self.first_name} ({self.username})"
-
 
     class Meta:
         verbose_name = 'Telegram User'
@@ -112,6 +112,7 @@ class Country(models.Model):
     name = models.CharField(max_length=100, blank=True, null=True, verbose_name='Name')
     preset_id = models.IntegerField(null=True, blank=True, verbose_name='preset_id')
     is_active = models.BooleanField(default=True, null=True, blank=True, verbose_name='Активно')
+
     def __str__(self):
         return f"{self.name}"
 
@@ -125,10 +126,10 @@ class GlobalSettings(models.Model):
     time_web_api_key = models.TextField(max_length=4000, blank=True, null=True, verbose_name='Time Web API Token')
     payment_system_api_key = models.CharField(max_length=1000, blank=True, null=True, verbose_name='Payment System 1')
     # prices = models.ForeignKey(to='Price', on_delete=models.CASCADE, null=True, blank=True, verbose_name='Prices')
-    cloud_init = models.TextField(max_length=4000,blank=True, null=True, verbose_name='Cloud Init')
+    cloud_init = models.TextField(max_length=4000, blank=True, null=True, verbose_name='Cloud Init')
     data_limit = models.BigIntegerField(blank=True, null=True, verbose_name='Data Limit GB')
-    os_id = models.IntegerField(blank=True, null=True,verbose_name='OS id')
-    software_id = models.IntegerField(blank=True, null=True,verbose_name='Software id')
+    os_id = models.IntegerField(blank=True, null=True, verbose_name='OS id')
+    software_id = models.IntegerField(blank=True, null=True, verbose_name='Software id')
 
     def __str__(self):
         return f"Settings"
@@ -154,7 +155,8 @@ class ReferralSettings(models.Model):
 
 
 class IncomeInfo(models.Model):
-    total_amount = models.DecimalField(blank=True, null=True, decimal_places=2, max_digits=10, verbose_name='Amount Total')
+    total_amount = models.DecimalField(blank=True, null=True, decimal_places=2, max_digits=10,
+                                       verbose_name='Amount Total')
     user_balance_total = models.DecimalField(blank=True, null=True, decimal_places=2, max_digits=10,
                                              verbose_name='User balance total')
 
@@ -205,3 +207,23 @@ class WithdrawalRequest(models.Model):
     class Meta:
         verbose_name = 'Withdrawal'
         verbose_name_plural = 'Withdrawal'
+
+
+LOG_LEVEL = (
+    ('Trace', 'TRACE'),
+    ('Debug', 'DEBUG'),
+    ('Info', 'INFO'),
+    ('Warning', 'WARNING'),
+    ('Fatal', 'FATAL'),
+)
+
+
+class Logging(models.Model):
+    log_level = models.CharField(max_length=50, null=True, blank=True, choices=LOG_LEVEL, verbose_name='LOG LEVEL')
+    message = models.TextField(max_length=4000, null=True, blank=True, verbose_name='Сообщение')
+    datetime = models.DateTimeField(auto_now_add=True, verbose_name='Время')
+    user = models.ForeignKey(to='TelegramUser', null=True, blank=True, on_delete=models.SET_NULL, verbose_name='Аккаунт')
+
+    class Meta:
+        verbose_name = 'Лог'
+        verbose_name_plural = 'Логи'

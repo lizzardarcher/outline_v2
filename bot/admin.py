@@ -1,8 +1,9 @@
 from django.contrib import admin
 from django.contrib.auth.models import Group
+from django.utils.html import format_html
+from django.conf import settings
 
 from bot.models import *
-from django.conf import settings
 
 DEBUG = settings.DEBUG
 # admin.site.site_url = ''
@@ -217,3 +218,27 @@ class PriceAdmin(admin.ModelAdmin):
 class CountryAdmin(admin.ModelAdmin):
     list_display = ('preset_id', 'name')
     list_display_links = ('preset_id', 'name')
+
+
+@admin.register(Logging)
+class LoggingAdmin(admin.ModelAdmin):
+
+
+    def get_log_level(self, obj):
+        if obj.log_level == 'Info':
+            return format_html('<div style="color:aqua;">%s</div>' % obj.log_level)
+        elif obj.log_level == 'Fatal':
+            return format_html('<div style="color:red;">%s</div>' % obj.log_level)
+        elif obj.log_level == 'Warning':
+            return format_html('<div style="color:orange;">%s</div>' % obj.log_level)
+        # elif obj.log_level == 'Trace':
+        #     return format_html('<div style="color:white;">%s</div>' % obj.log_level)
+        # elif obj.log_level == 'Debug':
+        #     return format_html('<div style="color:white;">%s</div>' % obj.log_level)
+        return obj.log_level
+
+    get_log_level.allow_tags = True
+    get_log_level.short_description = 'log_level'
+
+    list_display = ('get_log_level', 'datetime', 'user', 'message')
+    list_display_links = ('message',)
