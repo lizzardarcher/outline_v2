@@ -223,18 +223,17 @@ class CountryAdmin(admin.ModelAdmin):
 @admin.register(Logging)
 class LoggingAdmin(admin.ModelAdmin):
 
-
     def get_log_level(self, obj):
-        if obj.log_level == 'Info':
+        if obj.log_level == 'INFO':
             return format_html('<div style="color:aqua;">%s</div>' % obj.log_level)
-        elif obj.log_level == 'Fatal':
+        elif obj.log_level == 'FATAL':
             return format_html('<div style="color:red;">%s</div>' % obj.log_level)
-        elif obj.log_level == 'Warning':
+        elif obj.log_level == 'WARNING':
             return format_html('<div style="color:orange;">%s</div>' % obj.log_level)
-        # elif obj.log_level == 'Trace':
-        #     return format_html('<div style="color:white;">%s</div>' % obj.log_level)
-        # elif obj.log_level == 'Debug':
-        #     return format_html('<div style="color:white;">%s</div>' % obj.log_level)
+        elif obj.log_level == 'TRACE':
+            return format_html('<div style="color:white;">%s</div>' % obj.log_level)
+        elif obj.log_level == 'DEBUG':
+            return format_html('<div style="color:white;">%s</div>' % obj.log_level)
         return obj.log_level
 
     get_log_level.allow_tags = True
