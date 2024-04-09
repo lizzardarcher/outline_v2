@@ -55,6 +55,22 @@ def top_up_balance():
     return markup
 
 
+def confirm_subscription(price: int, days: int):
+    markup = InlineKeyboardMarkup()
+    btn1 = InlineKeyboardButton(text=f'Подтвердить приобретение подписки', callback_data=f'account:confirm_subscription:{str(price)}:{str(days)}')
+    markup.row(btn1)
+    markup.row(btn_back)
+    return markup
+
+
+def proceed_to_profile():
+    markup = InlineKeyboardMarkup()
+    btn1 = InlineKeyboardButton(text=f'👨 Профиль', callback_data=f'profile')
+    markup.row(btn1)
+    markup.row(btn_back)
+    return markup
+
+
 def my_profile():
     markup = InlineKeyboardMarkup()
     btn1 = InlineKeyboardButton(text=f'Пополнить баланс', callback_data=f'account:top_up_balance')
@@ -76,11 +92,11 @@ def paymemt_menu():
 
 def choose_subscription():
     markup = InlineKeyboardMarkup()
-    markup.add(InlineKeyboardButton(text=f'1 месяц (150 р)', callback_data=f'account:sub_1'))
-    markup.add(InlineKeyboardButton(text=f'3 месяца (400 р)', callback_data=f'account:sub_2'))
-    markup.add(InlineKeyboardButton(text=f'6 месяцев (700 р)', callback_data=f'account:sub_3'))
-    markup.add(InlineKeyboardButton(text=f'1 год (1000 р)', callback_data=f'account:sub_4'))
-    markup.add(InlineKeyboardButton(text=f'Пожизненная (2000 р)', callback_data=f'account:sub_5'))
+    markup.add(InlineKeyboardButton(text=f'1 месяц (150 р)', callback_data=f'account:sub:1'))
+    markup.add(InlineKeyboardButton(text=f'3 месяца (400 р)', callback_data=f'account:sub:2'))
+    markup.add(InlineKeyboardButton(text=f'6 месяцев (700 р)', callback_data=f'account:sub:3'))
+    markup.add(InlineKeyboardButton(text=f'1 год (1000 р)', callback_data=f'account:sub:4'))
+    markup.add(InlineKeyboardButton(text=f'Пожизненная (2000 р)', callback_data=f'account:sub:5'))
     markup.add(btn_back)
     return markup
 

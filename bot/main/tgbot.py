@@ -192,7 +192,8 @@ async def got_payment(message):
             elif level == 5:
                 percent = ReferralSettings.objects.get(pk=1).level_5_percentage
             if percent:
-                income = float(TelegramUser.objects.get(user_id=user_to_pay.user_id).income) + (amount * float(percent) / 100)
+                income = float(TelegramUser.objects.get(user_id=user_to_pay.user_id).income) + (
+                        amount * float(percent) / 100)
                 TelegramUser.objects.filter(user_id=user_to_pay.user_id).update(income=income)
                 await bot.send_message(user_to_pay.user_id,
                                        text=msg.income_from_referral.format(str(amount * float(percent) / 100)),
@@ -291,23 +292,43 @@ async def callback_query_handlers(call):
                         start_parameter=f'some-string-may-be',
                         need_phone_number=True,
                     )
-            # todo списывать деньги со баланса пользователя при приобретении подписки
 
-            elif 'sub_1' in data:
+            elif 'sub' in data:
                 user_balance = user.balance
-                if user_balance < 150:
-                    await bot.send_message(call.message.chat.id, text=msg.low_balance, reply_markup=markup.top_up_balance())
+                price = None
+                days = None
+                if data[-1] == '1':
+                    price = 150
+                    days = 31
+                elif data[-1] == '2':
+                    price = 400
+                    days = 93
+                elif data[-1] == '3':
+                    price = 700
+                    days = 186
+                elif data[-1] == '4':
+                    price = 1000
+                    days = 366
+                elif data[-1] == '5':
+                    price = 2000
+                    days = 9999
+                if user_balance < price:
+                    await bot.send_message(call.message.chat.id, text=msg.low_balance,
+                                           reply_markup=markup.top_up_balance())
+                else:
+                    description = f' <code>{days}</code> за <code>{price}р.</code>'
+                    await bot.send_message(call.message.chat.id, text=msg.confirm_subscription.format(description),
+                                           reply_markup=markup.confirm_subscription(price=price, days=days))
 
-                await send_dummy()
-            elif 'sub_2' in data:
-                await send_dummy()
-            elif 'sub_3' in data:
-                await send_dummy()
-            elif 'sub_4' in data:
-                await send_dummy()
-            elif 'sub_5' in data:
-                await send_dummy()
-
+            elif 'confirm_subscription' in data:
+                user_balance = user.balance
+                balance_after = user_balance - int(data[-2])
+                days = int(data[-1])
+                new_exp_date = user.subscription_expiration + timedelta(days=days)
+                TelegramUser.objects.filter(user_id=user.user_id).update(
+                    balance=balance_after, subscription_status=True,
+                    subscription_expiration=new_exp_date)
+                await bot.send_message(call.message.chat.id, text=msg.sub_successful.format(new_exp_date, data[-2]), reply_markup=markup.proceed_to_profile())
 
         # todo  Разобраться с остатками ГБ
 
