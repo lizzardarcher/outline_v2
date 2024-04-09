@@ -1,6 +1,9 @@
+import sys
 import time
+import traceback
 from datetime import date
 import logging
+from logging.handlers import RotatingFileHandler
 
 import paramiko
 from django.conf import settings
@@ -11,17 +14,19 @@ from bot.models import Server
 from bot.models import Country
 from bot.main.timeweb.timeweb import TimeWeb
 
-logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
+logging.basicConfig(
+    format='%(asctime)s %(levelname) -8s %(message)s',
+    level=logging.DEBUG,
+    datefmt='%Y.%m.%d %I:%M:%S',
+    handlers=[
+        RotatingFileHandler(filename='log/tw_log.log', maxBytes=1024*1024, backupCount=5),
+        # TimedRotatingFileHandler(filename='log/tw_log.log', when='D', interval=1, backupCount=5),
+        logging.StreamHandler(stream=sys.stderr)
+              ],
+)
 DEBUG = settings.DEBUG
 
-
-def timer(seconds: int):
-    print(f'Starting {seconds} seconds')
-    counter = 1
-    while counter <= seconds:
-        print(counter, end='\r')
-        time.sleep(1)
-        counter += 1
 
 
 def find_dict_item(obj, key):
@@ -54,22 +59,22 @@ def init_servers(countries: Country, headers: dict, json_data: dict, token: str)
         json_data['name'] = f'{country.name}-{country.preset_id}-{str(date.today())}'
         server_obj = Server.objects.filter(country=country)
         if not server_obj.exists():
-            if DEBUG: print(server_obj, country.name, country.preset_id)
+            logger.info(f'{server_obj}, {country.name}, {country.preset_id}')
             """
             ### Создание сервера
             """
-            if DEBUG: print(f'Начало создания сервера для {country.name} {country.preset_id} ...')
+            logger.info(f'Начало создания сервера для {country.name} {country.preset_id} ...')
             server_creating_status = True
             init_server = client.create_server(json_data=json_data)
-            timer(300)
+            time.sleep(300)
 
             server_id = init_server['server']['id']
-            if DEBUG: print(f'Cервер для {country.name} {country.preset_id} создан успешно!')
+            logger.info(f'Cервер для {country.name} {country.preset_id} создан успешно!')
 
             while server_creating_status:
                 try:
                     server = client.get_server(server_id=server_id)
-                    print(server)
+                    logger.info(server.__str__())
                     if country.name != 'russia':
                         ip = server['server']['networks'][0]['ips'][0]['ip']
                     else:
@@ -79,36 +84,29 @@ def init_servers(countries: Country, headers: dict, json_data: dict, token: str)
                         server_creating_status = False
                         break
                 except Exception as e:
-                    timer(15)
-                    print(e)
+                    time.sleep(15)
+                    logger.error(traceback.format_exc())
 
-            if DEBUG: print(f'Новый сервер по адресу {ip} {password}')
+            # доступ по SSH и получение скрипта для outline VPN
 
-            """
-            ### доступ по SSH и получение скрипта для outline VPN
-            """
-
-            if DEBUG: print(f'Подключаемся к новому серверу по SSH root@{ip} pwd:{password} port:22')
+            logger.info(f'Подключаемся к новому серверу по SSH root@{ip} pwd:{password} port:22')
             try:
                 ssh = paramiko.SSHClient()
-                if DEBUG: print(ssh)
                 ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
                 ssh.connect(hostname=ip, username='root', password=password, port=22)
                 stdin, stdout, stderr = ssh.exec_command('cd .. && cat configfile.txt')
                 out = stdout.read() + stderr.read()
-                if DEBUG: print(out.__str__())
+                logger.info(out.__str__())
                 open('configfile.txt', 'w').write(out.__str__())
                 ssh.close()
             except Exception as e:
-                print(e)
+                logger.error(traceback.format_exc())
             time.sleep(60)
-            if DEBUG: print('Подключение прошло успешно! Файл configfile.txt обновлён')
+            logger.info('Подключение прошло успешно! Файл configfile.txt обновлён')
 
-            """
-            ### Получение apiUrl и certSha256
-            """
+            # Получение apiUrl и certSha256
 
-            if DEBUG: print('Чтение данных из configfile.txt')
+            logger.info('Чтение данных из configfile.txt')
             data = dict()
             with open('configfile.txt', 'r') as config_file:
                 config = config_file.read()
@@ -118,7 +116,7 @@ def init_servers(countries: Country, headers: dict, json_data: dict, token: str)
                         data['apiUrl'] = raw[0].split('":"')[-1].replace("'", "").replace('"', '')
                         data['certSha256'] = raw[1].split(':')[-1].replace("'", "").replace('"', '')
 
-            if DEBUG: print(f'Данные их configfile.txt получены {str(data)}')
+            logger.info(f'Данные их configfile.txt получены {str(data)}')
             Server.objects.create(
                 id=server_id,
                 hosting='TimeWeb',
@@ -133,10 +131,9 @@ def init_servers(countries: Country, headers: dict, json_data: dict, token: str)
                 country=country,
                 script_out=data
             )
-            if DEBUG: print(f'Новый объект Server создан {Server.objects.get(id=server_id)}')
-            if DEBUG: print(f'Проверьте админку')
+            logger.info(f'Новый объект Server создан {Server.objects.get(id=server_id)}')
         else:
-            print(server_obj, 'is active')
+            logger.info(f'{server_obj} is active')
 
 
 timeweb_token = GlobalSettings.objects.get(pk=1).time_web_api_key

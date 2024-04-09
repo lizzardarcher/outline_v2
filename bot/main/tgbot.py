@@ -1,6 +1,8 @@
 import asyncio
 import logging
 import traceback
+import sys
+from logging.handlers import RotatingFileHandler, TimedRotatingFileHandler
 from math import ceil
 from datetime import datetime, timedelta, date
 
@@ -17,6 +19,7 @@ from bot.models import Server
 from bot.models import Country
 from bot.models import IncomeInfo
 from bot.models import ReferralSettings
+from bot.models import Logging
 
 from bot.main import msg
 from bot.main import markup
@@ -25,60 +28,40 @@ from bot.main.outline_client import create_new_key
 from bot.main.outline_client import delete_user_keys
 from bot.main.outline_client import update_keys_data_limit
 
+logger = logging.getLogger(__name__)
+logging.basicConfig(
+    format='%(asctime)s %(levelname) -8s %(message)s',
+    level=logging.DEBUG,
+    datefmt='%Y.%m.%d %I:%M:%S',
+    handlers=[
+        # RotatingFileHandler(filename='log/log.log', maxBytes=1024*1024, backupCount=5),
+        TimedRotatingFileHandler(filename='log/bot_log.log', when='D', interval=1, backupCount=5),
+        logging.StreamHandler(stream=sys.stderr)
+              ],
+)
+
 bot = AsyncTeleBot(TelegramBot.objects.get(pk=1).token)
 bot.parse_mode = 'HTML'
-logging.basicConfig(level=logging.DEBUG)
 DEBUG = settings.DEBUG
 
 
 def update_sub_status(user: TelegramUser):
     exp_date = user.subscription_expiration
     if exp_date < datetime.now().date():
-        print(f'{exp_date} less than current date {datetime.now().date()}')
         TelegramUser.objects.filter(user_id=user.user_id).update(subscription_status=False)
     else:
-        print(f'{exp_date} equal or greater to current date {datetime.now().date()}')
         TelegramUser.objects.filter(user_id=user.user_id).update(subscription_status=True)
-
 
 
 @bot.message_handler(commands=['test'])
 async def start(message):
-    if message.chat.type == 'private':
-        user = TelegramUser.objects.get(user_id=message.chat.id)
-        print(user)
-        referred_list = [x for x in TelegramReferral.objects.filter(referred=user)]
-        if DEBUG: print('referred_list', referred_list)
-
-        if referred_list:
-            for r in referred_list:
-                users_to_pay = TelegramUser.objects.filter(user_id=r.referrer.user_id)
-                if DEBUG: print('users_to_pay', users_to_pay)
-                level = r.level
-                if DEBUG: print('level', str(level))
-                # for u in users_to_pay:
-                #     percent = None
-                #     if level == 1:
-                #         percent = ReferralSettings.objects.get(pk=1).level_1_percentage
-                #     elif level == 2:
-                #         percent = ReferralSettings.objects.get(pk=1).level_2_percentage
-                #     elif level == 3:
-                #         percent = ReferralSettings.objects.get(pk=1).level_3_percentage
-                #     elif level == 4:
-                #         percent = ReferralSettings.objects.get(pk=1).level_4_percentage
-                #     elif level == 5:
-                #         percent = ReferralSettings.objects.get(pk=1).level_5_percentage
-                #     if percent:
-                #         income = float(TelegramUser.objects.get(user=u.user_id).income) + (
-                #                     amount * float(percent) / 100)
-                #         TelegramUser.objects.filter(user=u.user_id).update(income=income)
-                #         await bot.send_message(message.chat.id,
-                #                                text=msg.income_from_referral.format(str(amount * float(percent) / 100)))
+    logger.info(f'{message.from_user.id}: {message.text}')
 
 
 @bot.message_handler(commands=['start'])
 async def start(message):
     if message.chat.type == 'private':
+        logger.info(f'[{message.from_user.first_name}:{message.from_user.username}:{message.from_user.id}] [msg: {message.text}]')
         try:
             TelegramUser.objects.create(user_id=message.from_user.id,
                                         username=message.from_user.username,
@@ -98,44 +81,39 @@ async def start(message):
 @bot.message_handler(content_types=['text'])
 async def handle_referral(message):
     if message.chat.type == 'private':
+        logger.info(f'[{message.from_user.first_name}:{message.from_user.username}:{message.from_user.id}] [msg: {message.text}]')
         update_sub_status(user=TelegramUser.objects.get(user_id=message.chat.id))
         if 'start=' in message.text:
             referred_by = message.text.split('=')[-1]
             same_user_check = str(referred_by) == str(message.chat.id)
             if not same_user_check:
                 try:
-                    await bot.send_message(message.chat.id,
-                                           text=f"Вы были приглашены пользователем с ID: {referred_by}")
-
-                    if DEBUG: print('В попытке создать реферала')
+                    await bot.send_message(message.chat.id, text=f"Вы были приглашены пользователем с ID: {referred_by}")
 
                     referrer = TelegramUser.objects.get(user_id=referred_by)  # тот, от кого получена ссылка
                     referred = TelegramUser.objects.get(user_id=message.chat.id)  # тот, кто воспользовался ссылкой
 
-                    if DEBUG: print('Создаём реферала 1го уровня')
                     TelegramReferral.objects.create(referrer=referrer, referred=referred, level=1)
-                    if DEBUG: print('Успешно создали реферала 1го уровня')
 
                     await bot.send_message(chat_id=message.chat.id,
                                            text=msg.referral_bond.format(str(referrer.user_id), str(referred.user_id)))
 
                     #  Проверяем есть ли рефералы у того, кто отправил ссылку и получаем их список, если есть
                     referred_list = [x for x in TelegramReferral.objects.filter(referred=referrer, level__lte=4)]
-                    if DEBUG: print('referred_list', referred_list)
-
                     for r in referred_list:
                         current_level = r.level  # 1
                         current_referrer = r.referrer
                         new_referral = TelegramReferral.objects.create(referrer=current_referrer, referred=referred,
                                                                        level=current_level + 1)
-                        if DEBUG: print('Создана новая реферальная связь', new_referral)
+                        logger.info(f'Создана новая реферальная связь {new_referral}')
                     await bot.send_message(chat_id=message.chat.id,
                                            text=msg.start_message.format(message.from_user.first_name))
                     await bot.send_message(chat_id=message.chat.id, text=msg.main_menu)
                     await bot.send_message(chat_id=message.chat.id, text=msg.main_menu_choice,
                                            reply_markup=markup.start())
                 except:
-                    print(traceback.format_exc())
+                    logger.error(f'{traceback.format_exc()}')
+
             else:
                 await bot.send_message(chat_id=message.chat.id, text=msg.referral_bond_error)
                 await bot.send_message(chat_id=message.chat.id,
@@ -160,7 +138,7 @@ async def handle_referral(message):
                 except:
                     await bot.send_message(chat_id=message.chat.id, text=msg.start_payment_error.format(message.text),
                                            reply_markup=markup.back())
-                    print(traceback.format_exc())
+                    logger.error(f'{traceback.format_exc()}')
 
 
 @bot.pre_checkout_query_handler(func=lambda query: True)
@@ -170,7 +148,8 @@ async def checkout(pre_checkout_query):
 
 @bot.message_handler(content_types=['successful_payment'])
 async def got_payment(message):
-    print(message)
+    logger.info(f'[{message.from_user.first_name}:{message.from_user.username}:{message.from_user.id}] [msg: {message.successful_payment}]')
+
     user = TelegramUser.objects.get(user_id=message.chat.id)
     amount = float(message.successful_payment.total_amount / 100)
     currency = message.successful_payment.currency
@@ -184,14 +163,10 @@ async def got_payment(message):
     IncomeInfo.objects.all().update(total_amount=income + amount, user_balance_total=users_balance + amount)
 
     referred_list = [x for x in TelegramReferral.objects.filter(referred=user)]
-    if DEBUG: print('referred_list', referred_list)
-
     if referred_list:
         for r in referred_list:
             user_to_pay = TelegramUser.objects.filter(user_id=r.referrer.user_id)[0]
-            if DEBUG: print('user_to_pay', user_to_pay)
             level = r.level
-            if DEBUG: print('level', str(level))
             percent = None
             if level == 1:
                 percent = ReferralSettings.objects.get(pk=1).level_1_percentage
@@ -215,6 +190,7 @@ async def got_payment(message):
 @bot.callback_query_handler(func=lambda call: True)
 async def callback_query_handlers(call):
     data = call.data.split(':')
+    logger.info(f'[{call.message.chat.first_name}:{call.message.chat.username}:{call.message.chat.id}] [data: {call.data}]')
     user = TelegramUser.objects.get(user_id=call.message.chat.id)
     update_sub_status(user=user)
     country_list = [x.name for x in Country.objects.all()]
@@ -222,7 +198,6 @@ async def callback_query_handlers(call):
     async def send_dummy():
         await bot.send_message(call.message.chat.id, text=msg.dummy_message, reply_markup=markup.start())
 
-    print(data)
     if call.message.chat.type == 'private':
         await bot.delete_message(call.message.chat.id, call.message.message_id)
 
@@ -232,7 +207,6 @@ async def callback_query_handlers(call):
         elif 'country' in data:
             if user.subscription_status:
                 keys = VpnKey.objects.filter(user=user)
-                countries = [x.server.country.name for x in keys]
                 country = return_matches(country_list, data)[0]
 
                 if country:
@@ -241,7 +215,7 @@ async def callback_query_handlers(call):
                         await bot.send_message(call.message.chat.id, text=f'{msg.key_avail}:\n<code>{key}</code>',
                                                reply_markup=markup.key_menu(country))
                     except:
-                        if DEBUG: print(traceback.format_exc())
+                        logger.error(f'{traceback.format_exc()}')
                         await bot.send_message(call.message.chat.id, text=msg.get_new_key,
                                                reply_markup=markup.get_new_key(country))
             else:
@@ -252,6 +226,7 @@ async def callback_query_handlers(call):
 
             if 'get_new_key' in call.data:
                 try:
+
                     #  Удаляем все предыдущие ключи
                     await delete_user_keys(user=user)
                     country = call.data.split('_')[-1]
@@ -260,7 +235,7 @@ async def callback_query_handlers(call):
                     await bot.send_message(call.message.chat.id, text=f'{msg.key_avail}:\n<code>{key}</code>',
                                            reply_markup=markup.key_menu(country))
                 except:
-                    await bot.send_message(call.message.chat.id, text=f'{traceback.format_exc()}')
+                    logger.error(f'{traceback.format_exc()}')
 
             elif 'swap_key' in call.data:
                 try:
@@ -273,10 +248,11 @@ async def callback_query_handlers(call):
                     await bot.send_message(call.message.chat.id, text=f'{msg.key_avail}:\n<code>{key}</code>',
                                            reply_markup=markup.key_menu(country))
                 except:
-                    await bot.send_message(call.message.chat.id, text=f'{traceback.format_exc()}')
+                    logger.error(f'{traceback.format_exc()}')
 
             elif 'top_up_balance' in data:
                 await bot.send_message(call.message.chat.id, text=msg.paymemt_menu, reply_markup=markup.paymemt_menu())
+
             elif 'buy_subscripton' in data:
                 await bot.send_message(call.message.chat.id, text=msg.choose_subscription,
                                        reply_markup=markup.choose_subscription())
@@ -341,7 +317,8 @@ async def callback_query_handlers(call):
                 TelegramUser.objects.filter(user_id=user.user_id).update(
                     balance=balance_after, subscription_status=True,
                     subscription_expiration=new_exp_date)
-                await bot.send_message(call.message.chat.id, text=msg.sub_successful.format(new_exp_date, data[-2]), reply_markup=markup.proceed_to_profile())
+                await bot.send_message(call.message.chat.id, text=msg.sub_successful.format(new_exp_date, data[-2]),
+                                       reply_markup=markup.proceed_to_profile())
 
         # todo  Разобраться с остатками ГБ
 
@@ -371,8 +348,9 @@ async def callback_query_handlers(call):
             inv_4_lvl = TelegramReferral.objects.filter(referrer=user, level=4).__len__()
             inv_5_lvl = TelegramReferral.objects.filter(referrer=user, level=5).__len__()
             referral_link = f"Твоя реферальная ссылка: <code>https://t.me/{bot_username}?start={referral_code}</code>\n"
-            # await bot.send_message(call.message.chat.id, text=referral_link)
-            await bot.send_message(call.message.chat.id, text=referral_link+ msg.referral.format(inv_1_lvl, inv_2_lvl, inv_3_lvl, inv_4_lvl, inv_5_lvl, user_income),
+            await bot.send_message(call.message.chat.id,
+                                   text=referral_link + msg.referral.format(inv_1_lvl, inv_2_lvl, inv_3_lvl, inv_4_lvl,
+                                                                            inv_5_lvl, user_income),
                                    reply_markup=markup.withdraw_funds(call.message.chat.id))
         elif 'withdraw' in data:
             await send_dummy()
@@ -390,5 +368,5 @@ async def callback_query_handlers(call):
         elif 'back' in data:
             await bot.send_message(chat_id=call.message.chat.id, text=msg.main_menu_choice, reply_markup=markup.start())
 
-
-asyncio.run(bot.polling(non_stop=True))
+if __name__ == '__main__':
+    asyncio.run(bot.polling(non_stop=True))
