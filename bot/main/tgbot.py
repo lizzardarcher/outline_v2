@@ -356,7 +356,11 @@ async def callback_query_handlers(call):
                                                                             inv_5_lvl, user_income),
                                    reply_markup=markup.withdraw_funds(call.message.chat.id))
         elif 'withdraw' in data:
-            if user.income >= 500:
+            timestamp = WithdrawalRequest.objects.filter(user=user).last().timestamp
+
+            if timestamp.date() == date.today():
+                await bot.send_message(call.message.chat.id, text=msg.withdraw_request_duplicate.format(str(user.income)), reply_markup=markup.proceed_to_profile())
+            elif user.income >= 500:
                 WithdrawalRequest.objects.create(
                     user=user,
                     amount=user.income,
