@@ -6,7 +6,7 @@ from django.conf import settings
 from bot.models import *
 
 DEBUG = settings.DEBUG
-# admin.site.site_url = ''
+admin.site.site_url = ''
 admin.site.site_header = "Outline VPN Админ Панель"
 admin.site.site_title = "Outline VPN"
 admin.site.index_title = "Добро пожаловать в Outline VPN Админ Панель"
@@ -114,7 +114,7 @@ class TelegramReferralAdmin(admin.ModelAdmin):
 
 @admin.register(Transaction)
 class TransactionAdmin(admin.ModelAdmin):
-    list_display = ('user', 'amount', 'currency', 'timestamp')
+    list_display = ('user', 'amount', 'currency', 'timestamp', 'side')
 
     def has_add_permission(self, request):
         if not DEBUG:
@@ -140,8 +140,8 @@ class WithdrawalRequestAdmin(admin.ModelAdmin):
         else:
             return True
 
-    def has_delete_permission(self, request, obj=None):
-        return False
+    # def has_delete_permission(self, request, obj=None):
+    #     return False
 
 
 @admin.register(ReferralSettings)
@@ -202,19 +202,19 @@ class ServerAdmin(admin.ModelAdmin):
     inlines = [VpnKeyInline]
 
 
-@admin.register(Price)
-class PriceAdmin(admin.ModelAdmin):
-    def has_add_permission(self, request):
-        if Price.objects.all():
-            return False
-        else:
-            return True
-
-    def get_actions(self, request):
-        actions = super().get_actions(request)
-        if 'delete_selected' in actions:
-            del actions['delete_selected']
-        return actions
+# @admin.register(Price)
+# class PriceAdmin(admin.ModelAdmin):
+#     def has_add_permission(self, request):
+#         if Price.objects.all():
+#             return False
+#         else:
+#             return True
+#
+#     def get_actions(self, request):
+#         actions = super().get_actions(request)
+#         if 'delete_selected' in actions:
+#             del actions['delete_selected']
+#         return actions
 
 
 @admin.register(Country)
@@ -223,24 +223,24 @@ class CountryAdmin(admin.ModelAdmin):
     list_display_links = ('preset_id', 'name')
 
 
-@admin.register(Logging)
-class LoggingAdmin(admin.ModelAdmin):
-
-    def get_log_level(self, obj):
-        if obj.log_level == 'INFO':
-            return format_html('<div style="color:aqua;">%s</div>' % obj.log_level)
-        elif obj.log_level == 'FATAL':
-            return format_html('<div style="color:red;">%s</div>' % obj.log_level)
-        elif obj.log_level == 'WARNING':
-            return format_html('<div style="color:orange;">%s</div>' % obj.log_level)
-        elif obj.log_level == 'TRACE':
-            return format_html('<div style="color:white;">%s</div>' % obj.log_level)
-        elif obj.log_level == 'DEBUG':
-            return format_html('<div style="color:white;">%s</div>' % obj.log_level)
-        return obj.log_level
-
-    get_log_level.allow_tags = True
-    get_log_level.short_description = 'log_level'
-
-    list_display = ('get_log_level', 'datetime', 'user', 'message')
-    list_display_links = ('message',)
+# @admin.register(Logging)
+# class LoggingAdmin(admin.ModelAdmin):
+#
+#     def get_log_level(self, obj):
+#         if obj.log_level == 'INFO':
+#             return format_html('<div style="color:aqua;">%s</div>' % obj.log_level)
+#         elif obj.log_level == 'FATAL':
+#             return format_html('<div style="color:red;">%s</div>' % obj.log_level)
+#         elif obj.log_level == 'WARNING':
+#             return format_html('<div style="color:orange;">%s</div>' % obj.log_level)
+#         elif obj.log_level == 'TRACE':
+#             return format_html('<div style="color:white;">%s</div>' % obj.log_level)
+#         elif obj.log_level == 'DEBUG':
+#             return format_html('<div style="color:white;">%s</div>' % obj.log_level)
+#         return obj.log_level
+#
+#     get_log_level.allow_tags = True
+#     get_log_level.short_description = 'log_level'
+#
+#     list_display = ('get_log_level', 'datetime', 'user', 'message')
+#     list_display_links = ('message',)

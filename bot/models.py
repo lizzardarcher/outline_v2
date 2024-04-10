@@ -30,9 +30,9 @@ class TelegramUser(models.Model):
             return f"{self.first_name} ({self.username})"
 
     class Meta:
-        verbose_name = 'Telegram User'
-        verbose_name_plural = 'Telegram Users'
-        ordering = ['user_id']
+        verbose_name = 'Пользователь ТГ'
+        verbose_name_plural = 'Пользователи ТГ'
+        ordering = ['-join_date']
 
 
 class TelegramReferral(models.Model):
@@ -46,6 +46,8 @@ class TelegramReferral(models.Model):
         return f"{self.referrer} {self.referrer}"
 
     class Meta:
+        verbose_name = 'Реферал'
+        verbose_name_plural = 'Рефералы'
         unique_together = ('referrer', 'referred')
 
 
@@ -57,7 +59,7 @@ class TelegramBot(models.Model):
 
     class Meta:
         verbose_name = 'Telegram Bot'
-        verbose_name_plural = 'Telegram Bots'
+        verbose_name_plural = 'Telegram Bot'
         ordering = ['created_at']
 
     def __str__(self):
@@ -81,6 +83,9 @@ class Transaction(models.Model):
     def __str__(self):
         return f"Транзакция пользователя - {self.user.username}: {self.amount} от {self.timestamp}"
 
+    class Meta:
+        verbose_name = 'Транзакция'
+        verbose_name_plural = 'Транзакции'
 
 class VpnKey(models.Model):
     created_at = models.DateField(auto_now_add=True, verbose_name='Создано')
@@ -171,8 +176,8 @@ class ReferralSettings(models.Model):
         return f"Level 1 ({self.level_1_percentage}%) --- Level 2: ({self.level_2_percentage}%) --- Level 3 ({self.level_3_percentage}%) --- Level 4 ({self.level_4_percentage}%) --- Level 5 ({self.level_5_percentage}%)"
 
     class Meta:
-        verbose_name = 'Referral Settings'
-        verbose_name_plural = 'Referral Settings'
+        verbose_name = 'Настройки Рефералов'
+        verbose_name_plural = 'Настройки Рефералов'
 
 
 class IncomeInfo(models.Model):
@@ -245,8 +250,8 @@ class WithdrawalRequest(models.Model):
             super(WithdrawalRequest, self).save(*args, **kwargs)
 
     class Meta:
-        verbose_name = 'Withdrawal'
-        verbose_name_plural = 'Withdrawal'
+        verbose_name = 'Запрос на вывод средств'
+        verbose_name_plural = 'Запросы на вывод средств'
 
 
 LOG_LEVEL = (
