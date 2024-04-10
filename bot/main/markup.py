@@ -15,10 +15,31 @@ def start():
     btn2 = InlineKeyboardButton(text=f'👨 Профиль', callback_data=f'profile')
     btn3 = InlineKeyboardButton(text=f'🆘 Помощь', callback_data=f'help')
     btn4 = InlineKeyboardButton(text=f'ℹ Информация', callback_data=f'common_info')
+    btn5 = InlineKeyboardButton(text=f'📲 Скачать приложение', callback_data=f'download_app')
     markup.row(btn1, btn2)
     markup.row(btn3, btn4)
+    markup.row(btn5)
     return markup
 
+
+def download_app():
+    markup = InlineKeyboardMarkup()
+    markup.add(InlineKeyboardButton(text=f'📱 iPhone/iPad', url=f'https://itunes.apple.com/app/outline-app/id1356177741'))
+    markup.add(InlineKeyboardButton(text=f'📱 Android', url=f'https://play.google.com/store/apps/details?id=org.outline.android.client'))
+    markup.add(InlineKeyboardButton(text=f'💻 Windows', url=f'https://s3.amazonaws.com/outline-releases/client/windows/stable/Outline-Client.exe'))
+    markup.add(InlineKeyboardButton(text=f'💻 MacOS', url=f'https://apps.apple.com/ru/app/outline-secure-internet-access/id1356178125'))
+    markup.add(InlineKeyboardButton(text=f'💻 Linux', url=f'https://s3.amazonaws.com/outline-releases/client/linux/stable/Outline-Client.AppImage'))
+    markup.add(btn_back)
+    return markup
+
+
+def help_markup():
+    markup = InlineKeyboardMarkup()
+    markup.add(InlineKeyboardButton(text='Ссылки на скачивание', url='https://telegra.ph/VPN-TON--Ssylki-na-skachivanie-04-09'))
+    markup.add(InlineKeyboardButton(text='Условия использования', url='https://telegra.ph/Usloviya-polzovaniya-servisom-VPN-TON-04-10'))
+    markup.add(InlineKeyboardButton(text='Инструкция', url='https://telegra.ph/Instrukciya-VPN-TON-04-10'))
+    markup.add(btn_back)
+    return markup
 
 def back():
     markup = InlineKeyboardMarkup()
@@ -39,7 +60,7 @@ def get_avail_location():
 def get_subscription():
     markup = InlineKeyboardMarkup()
     btn1 = InlineKeyboardButton(text=f'💳 Пополнить баланс', callback_data=f'account:top_up_balance')
-    btn2 = InlineKeyboardButton(text=f'💲 Купить подписку', callback_data=f'account:buy_subscripton')
+    btn2 = InlineKeyboardButton(text=f'💲 Приобрести подписку', callback_data=f'account:buy_subscripton')
     btn3 = InlineKeyboardButton(text=f'🆘 Помощь', callback_data=f'popup_help')
     markup.row(btn1, btn2)
     markup.row(btn3)
@@ -112,7 +133,7 @@ def key_menu(country: str):
 
 def get_new_key(country: str):
     markup = InlineKeyboardMarkup()
-    btn1 = InlineKeyboardButton(text=f'🔑 Получить новый ключ', callback_data=f'account:get_new_key_{country}')
+    btn1 = InlineKeyboardButton(text=f'🔑 Получить ключ', callback_data=f'account:get_new_key_{country}')
     markup.row(btn1)
     markup.row(btn_back)
     return markup

@@ -265,6 +265,8 @@ async def callback_query_handlers(call):
                 if 'ukassa' in data:
                     await bot.send_message(call.message.chat.id, text=msg.top_up_balance)
                     TelegramUser.objects.filter(user_id=user.user_id).update(top_up_balance_listener=True)
+                elif 'usdt' in data:
+                    await bot.send_message(call.message.chat.id, text=msg.usdt_message, reply_markup=markup.proceed_to_profile())
                 elif 'details' in data:
                     price = LabeledPrice(label='test', amount=int(data[-2]) * 100)
                     await bot.send_invoice(
@@ -355,6 +357,7 @@ async def callback_query_handlers(call):
                                    text=referral_link + msg.referral.format(inv_1_lvl, inv_2_lvl, inv_3_lvl, inv_4_lvl,
                                                                             inv_5_lvl, user_income),
                                    reply_markup=markup.withdraw_funds(call.message.chat.id))
+
         elif 'withdraw' in data:
             timestamp = WithdrawalRequest.objects.filter(user=user).last().timestamp
 
@@ -371,6 +374,7 @@ async def callback_query_handlers(call):
                 logger.info(f'[{call.message.chat.first_name} : {call.message.chat.username} : {call.message.chat.id}] [withdrawal request: {user} {user.income}]')
             else:
                 await bot.send_message(call.message.chat.id, text=msg.withdraw_request_not_enough.format(str(user.income)), reply_markup=markup.proceed_to_profile())
+
         elif 'help' in data:
             await bot.send_message(call.message.chat.id, text=msg.help_message, reply_markup=markup.start(),
                                    parse_mode='HTML')
@@ -379,8 +383,11 @@ async def callback_query_handlers(call):
             await bot.answer_callback_query(call.id, text=msg.popup_help, show_alert=True)
 
         elif 'common_info' in data:
+            await bot.send_message(call.message.chat.id, text=msg.commom_info, reply_markup=markup.help_markup())
 
-            await bot.send_message(call.message.chat.id, text=msg.commom_info, reply_markup=markup.back())
+        elif 'download_app' in data:
+            await bot.send_message(call.message.chat.id, text=msg.download_app, reply_markup=markup.download_app())
+
         elif 'back' in data:
             await bot.send_message(chat_id=call.message.chat.id, text=msg.main_menu_choice, reply_markup=markup.start())
 
