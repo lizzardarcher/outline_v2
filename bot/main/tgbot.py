@@ -146,7 +146,9 @@ async def checkout(pre_checkout_query):
 
 @bot.message_handler(content_types=['successful_payment'])
 async def got_payment(message):
-    logger.info(f'[{message.from_user.first_name}:{message.from_user.username}:{message.from_user.id}] [msg: {message.successful_payment}]')
+    payment = message.successful_payment
+    logger.info(f'[{message.from_user.first_name}:{message.from_user.username}:{message.from_user.id}] '
+                f'[successful payment: {str(int(payment.total_amount)/100)} {payment.currency} | {payment}]')
 
     user = TelegramUser.objects.get(user_id=message.chat.id)
     amount = float(message.successful_payment.total_amount / 100)
@@ -261,13 +263,12 @@ async def callback_query_handlers(call):
                     TelegramUser.objects.filter(user_id=user.user_id).update(top_up_balance_listener=True)
                 elif 'details' in data:
                     price = LabeledPrice(label='test', amount=int(data[-2]) * 100)
-                    print(price)
                     await bot.send_invoice(
                         chat_id=call.message.chat.id,
                         title='Outline VPN Key',
                         description='Пополнение баланса для генерации ключей Outline VPN',
                         invoice_payload=f'{str(user.user_id)}:{data[-2]}',
-                        provider_token='381764678:TEST:82102',
+                        provider_token='381764678:TEST:82447',
                         currency='RUB',
                         prices=[price],
                         photo_url='https://bitlaunch.io/blog/content/images/size/w2000/2022/10/Outline-VPN.png',
