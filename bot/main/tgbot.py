@@ -20,6 +20,7 @@ from bot.models import Country
 from bot.models import IncomeInfo
 from bot.models import ReferralSettings
 from bot.models import Logging
+from bot.models import WithdrawalRequest
 
 from bot.main import msg
 from bot.main import markup
@@ -54,13 +55,13 @@ def update_sub_status(user: TelegramUser):
 
 @bot.message_handler(commands=['test'])
 async def start(message):
-    logger.info(f'{message.from_user.id}: {message.text}')
+    logger.info(f'{message.from_user.id} : {message.text}')
 
 
 @bot.message_handler(commands=['start'])
 async def start(message):
     if message.chat.type == 'private':
-        logger.info(f'[{message.from_user.first_name}:{message.from_user.username}:{message.from_user.id}] [msg: {message.text}]')
+        logger.info(f'[{message.from_user.first_name} : {message.from_user.username} : {message.from_user.id}] [msg: {message.text}]')
         try:
             TelegramUser.objects.create(user_id=message.from_user.id,
                                         username=message.from_user.username,
@@ -79,7 +80,7 @@ async def start(message):
 @bot.message_handler(content_types=['text'])
 async def handle_referral(message):
     if message.chat.type == 'private':
-        logger.info(f'[{message.from_user.first_name}:{message.from_user.username}:{message.from_user.id}] [msg: {message.text}]')
+        logger.info(f'[{message.from_user.first_name} : {message.from_user.username} : {message.from_user.id}] [msg: {message.text}]')
         update_sub_status(user=TelegramUser.objects.get(user_id=message.chat.id))
         if 'start=' in message.text:
             referred_by = message.text.split('=')[-1]
@@ -147,7 +148,7 @@ async def checkout(pre_checkout_query):
 @bot.message_handler(content_types=['successful_payment'])
 async def got_payment(message):
     payment = message.successful_payment
-    logger.info(f'[{message.from_user.first_name}:{message.from_user.username}:{message.from_user.id}] '
+    logger.info(f'[{message.chat.first_name} : {message.chat.username} : {message.chat.id}] '
                 f'[successful payment: {str(int(payment.total_amount)/100)} {payment.currency} | {payment}]')
 
     user = TelegramUser.objects.get(user_id=message.chat.id)
@@ -352,7 +353,14 @@ async def callback_query_handlers(call):
                                                                             inv_5_lvl, user_income),
                                    reply_markup=markup.withdraw_funds(call.message.chat.id))
         elif 'withdraw' in data:
+            WithdrawalRequest.objects.create(
+                user=user,
+                amount=user.income,
+                currency='RUB',
+                timestamp=datetime.now(),
+            )
             await bot.send_message(call.message.chat.id, text=msg.withdraw_request, reply_markup=markup.proceed_to_profile())
+            logger.info(f'[{call.message.chat.first_name}:{call.message.chat.username}:{call.message.chat.id}] [withdrawal request: {user} {user.income}]')
 
         elif 'help' in data:
             await bot.send_message(call.message.chat.id, text=msg.help_message, reply_markup=markup.start(),
