@@ -28,7 +28,7 @@ class WithdrawalRequestInline(admin.TabularInline):
 
 class TransactionInline(admin.TabularInline):
     model = Transaction
-
+    fields = ('user', 'amount', 'currency', 'side')
     def has_add_permission(self, request, obj):
         return False
 
@@ -56,9 +56,11 @@ class VpnKeyInline(admin.TabularInline):
 class TelegramUserAdmin(admin.ModelAdmin):
     list_display = (
         'join_date', 'first_name', 'last_name', 'username', 'subscription_status', 'subscription_expiration')
+    list_display_links = (
+        'join_date', 'first_name', 'last_name', 'username', 'subscription_status', 'subscription_expiration')
     search_fields = ('first_name', 'last_name', 'username', 'user_id')
-    if not DEBUG:
-        readonly_fields = ('join_date', 'first_name', 'last_name', 'username',)
+    readonly_fields = ('join_date', 'first_name', 'last_name', 'username', 'user_id', 'balance', 'income', 'subscription_status', 'subscription_expiration')
+    exclude = ('data_limit', 'is_banned', 'top_up_balance_listener', 'withdrawal_listener')
     ordering = ('-subscription_status', 'subscription_expiration',)
     empty_value_display = '---'
     inlines = [TransactionInline, VpnKeyInline, WithdrawalRequestInline]
@@ -181,6 +183,7 @@ class IncomeInfo(admin.ModelAdmin):
             del actions['delete_selected']
         return actions
 
+    inlines = [TransactionInline]
 
 @admin.register(VpnKey)
 class VpnKey(admin.ModelAdmin):

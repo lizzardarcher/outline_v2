@@ -1,20 +1,23 @@
+from datetime import datetime
+
 from django.db import models
 
 
 class TelegramUser(models.Model):
-    join_date = models.DateField(auto_now_add=True, verbose_name='Joined at')
+    join_date = models.DateField(auto_now_add=True, verbose_name='Присоединился')
     user_id = models.BigIntegerField(unique=True, verbose_name='user_id')
     username = models.CharField(max_length=255, blank=True, null=True, verbose_name='username')
-    first_name = models.CharField(max_length=255, verbose_name='First name')
-    last_name = models.CharField(max_length=255, blank=True, null=True, verbose_name='Last name')
+    first_name = models.CharField(max_length=255, verbose_name='Имя')
+    last_name = models.CharField(max_length=255, blank=True, null=True, verbose_name='Фамилия')
 
-    is_banned = models.BooleanField(default=False, verbose_name='Is Banned')
-    balance = models.DecimalField(max_digits=10, decimal_places=2, default=0.00, verbose_name='Balance')
+    is_banned = models.BooleanField(default=False, verbose_name='Забанен')
+    balance = models.DecimalField(max_digits=10, decimal_places=2, default=0.00,
+                                  verbose_name='Баланс для активации подписок')
     income = models.DecimalField(max_digits=10, decimal_places=2, default=0.00,
-                                 verbose_name='Income from referral program')
-    subscription_status = models.BooleanField(default=False, verbose_name='Subscription status')
+                                 verbose_name='Доход от реферальной программы')
+    subscription_status = models.BooleanField(default=False, verbose_name='Статус подписки')
     subscription_expiration = models.DateField(default=None, blank=True, null=True,
-                                               verbose_name='Subscription expiration')
+                                               verbose_name='Дата окончания подписки')
     data_limit = models.BigIntegerField(verbose_name='Data Limit', blank=True, null=True, default=0)
 
     top_up_balance_listener = models.BooleanField(default=False, verbose_name='Top up balance listener')
@@ -33,8 +36,10 @@ class TelegramUser(models.Model):
 
 
 class TelegramReferral(models.Model):
-    referrer = models.ForeignKey(TelegramUser, on_delete=models.CASCADE, related_name='given_referrals')
-    referred = models.ForeignKey(TelegramUser, on_delete=models.CASCADE, related_name='received_referrals')
+    referrer = models.ForeignKey(TelegramUser, on_delete=models.CASCADE, related_name='given_referrals',
+                                 verbose_name='Поделился ссылкой')
+    referred = models.ForeignKey(TelegramUser, on_delete=models.CASCADE, related_name='received_referrals',
+                                 verbose_name='Зарегистрирован по ссылке')
     level = models.IntegerField(default=0, verbose_name='Level')
 
     def __str__(self):
@@ -46,9 +51,9 @@ class TelegramReferral(models.Model):
 
 class TelegramBot(models.Model):
     username = models.CharField(max_length=255, unique=True, verbose_name='Username')
-    title = models.CharField(max_length=255, verbose_name='Title', blank=True, null=True)
+    title = models.CharField(max_length=255, verbose_name='Название', blank=True, null=True)
     token = models.CharField(max_length=255, verbose_name='Token', blank=True, null=True)
-    created_at = models.DateField(auto_now_add=True, verbose_name='Created at')
+    created_at = models.DateField(auto_now_add=True, verbose_name='Создан')
 
     class Meta:
         verbose_name = 'Telegram Bot'
@@ -59,20 +64,28 @@ class TelegramBot(models.Model):
         return self.title
 
 
+SIDE = (
+    ('Приход средств', 'Приход средств'),
+    ('Вывод средств', 'Вывод средств'),
+)
+
+
 class Transaction(models.Model):
-    user = models.ForeignKey(TelegramUser, on_delete=models.CASCADE)
-    amount = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Amount')
-    currency = models.CharField(max_length=100, blank=True, null=True, verbose_name='Currency')
-    timestamp = models.DateTimeField(auto_now_add=True, verbose_name='Timestamp')
+    income_info = models.ForeignKey('IncomeInfo', on_delete=models.CASCADE, related_name='Доходы')
+    user = models.ForeignKey(TelegramUser, on_delete=models.CASCADE, verbose_name='Пользователь')
+    amount = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Количество')
+    currency = models.CharField(max_length=100, blank=True, null=True, verbose_name='Валюта')
+    timestamp = models.DateTimeField(auto_now_add=True, verbose_name='Время')
+    side = models.CharField(max_length=100, blank=True, null=True, choices=SIDE, verbose_name='Направление транзакции')
 
     def __str__(self):
-        return f"Transaction of {self.user.username}: {self.amount} at {self.timestamp}"
+        return f"Транзакция пользователя - {self.user.username}: {self.amount} от {self.timestamp}"
 
 
 class VpnKey(models.Model):
-    created_at = models.DateField(auto_now_add=True, verbose_name='created_at')
-    server = models.ForeignKey(to='Server', on_delete=models.CASCADE, verbose_name='Server', blank=True, null=True)
-    user = models.ForeignKey(TelegramUser, on_delete=models.CASCADE)
+    created_at = models.DateField(auto_now_add=True, verbose_name='Создано')
+    server = models.ForeignKey(to='Server', on_delete=models.CASCADE, verbose_name='Сервер', blank=True, null=True)
+    user = models.ForeignKey(TelegramUser, on_delete=models.CASCADE, verbose_name='Пользователь')
 
     key_id = models.CharField(max_length=1000, verbose_name='Key ID', unique=True, primary_key=True)
     name = models.CharField(max_length=255, verbose_name='Name', blank=True, null=True)
@@ -86,30 +99,38 @@ class VpnKey(models.Model):
     def __str__(self):
         return f"{self.user} {self.access_url} ({self.created_at})"
 
+    class Meta:
+        verbose_name = 'VPN Ключ'
+        verbose_name_plural = 'VPN Ключи'
+
 
 class Server(models.Model):
-    hosting = models.CharField(max_length=1000, blank=True, null=True, verbose_name='Hosting')
+    hosting = models.CharField(max_length=1000, blank=True, null=True, verbose_name='Хостинг')
     ip_address = models.CharField(max_length=1000, blank=True, null=True, verbose_name='IP Address')
-    user = models.CharField(max_length=1000, blank=True, null=True, default='root', verbose_name='user')
-    password = models.CharField(max_length=1000, blank=True, null=True, default='<PASSWORD>', verbose_name='password')
-    configuration = models.TextField(max_length=10000, blank=True, null=True, verbose_name='Configuration')
-    rental_price = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Rental Price')
-    max_keys = models.IntegerField(blank=True, null=True, verbose_name='Max Keys')
-    keys_generated = models.IntegerField(blank=True, null=True, verbose_name='Keys generated')
-    is_active = models.BooleanField(default=True, verbose_name='Active')
-    created_at = models.DateField(auto_now_add=True, verbose_name='Timestamp')
+    user = models.CharField(max_length=1000, blank=True, null=True, default='root', verbose_name='Пользователь')
+    password = models.CharField(max_length=1000, blank=True, null=True, default='<PASSWORD>', verbose_name='Пароль')
+    configuration = models.TextField(max_length=10000, blank=True, null=True, verbose_name='Конфигурация')
+    rental_price = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Цена аренды в месяц')
+    max_keys = models.IntegerField(blank=True, null=True, verbose_name='Лимит ключей')
+    keys_generated = models.IntegerField(blank=True, null=True, verbose_name='Ключей сгенерировано')
+    is_active = models.BooleanField(default=True, verbose_name='Сервер Активнен')
+    created_at = models.DateField(auto_now_add=True, verbose_name='Дата создания')
 
     api_url = models.CharField(max_length=1000, blank=True, null=True, verbose_name='API URL')
     cert_sha256 = models.CharField(max_length=1000, blank=True, null=True, verbose_name='Certificate SHA256')
     script_out = models.JSONField(blank=True, null=True, verbose_name='Script Out Info JSON')
-    country = models.ForeignKey('Country', on_delete=models.CASCADE, null=True, blank=True, verbose_name='Country')
+    country = models.ForeignKey('Country', on_delete=models.CASCADE, null=True, blank=True, verbose_name='Страна')
 
     def __str__(self):
         return f"{self.hosting} root@{self.ip_address} ({self.created_at}) {self.country.name}"
 
+    class Meta:
+        verbose_name = 'VPN сервер'
+        verbose_name_plural = 'VPN сервера'
+
 
 class Country(models.Model):
-    name = models.CharField(max_length=100, blank=True, null=True, verbose_name='Name')
+    name = models.CharField(max_length=100, blank=True, null=True, verbose_name='Название страны')
     preset_id = models.IntegerField(null=True, blank=True, verbose_name='preset_id')
     is_active = models.BooleanField(default=True, null=True, blank=True, verbose_name='Активно')
 
@@ -117,12 +138,12 @@ class Country(models.Model):
         return f"{self.name}"
 
     class Meta:
-        verbose_name = 'Country'
-        verbose_name_plural = 'Countries'
+        verbose_name = 'Страна'
+        verbose_name_plural = 'Страны'
 
 
 class GlobalSettings(models.Model):
-    server_amount = models.IntegerField(blank=True, null=True, verbose_name='Server Amount')
+    server_amount = models.IntegerField(blank=True, null=True, verbose_name='Количество сервероа')
     time_web_api_key = models.TextField(max_length=4000, blank=True, null=True, verbose_name='Time Web API Token')
     payment_system_api_key = models.CharField(max_length=1000, blank=True, null=True, verbose_name='Payment System 1')
     # prices = models.ForeignKey(to='Price', on_delete=models.CASCADE, null=True, blank=True, verbose_name='Prices')
@@ -132,11 +153,11 @@ class GlobalSettings(models.Model):
     software_id = models.IntegerField(blank=True, null=True, verbose_name='Software id')
 
     def __str__(self):
-        return f"Settings"
+        return f"НАСТРОЙКИ: Количество VPN серверов: {str(self.server_amount)}"
 
     class Meta:
-        verbose_name = 'Global Settings'
-        verbose_name_plural = 'Global Settings'
+        verbose_name = 'Настройки'
+        verbose_name_plural = 'Настройки'
 
 
 class ReferralSettings(models.Model):
@@ -156,13 +177,16 @@ class ReferralSettings(models.Model):
 
 class IncomeInfo(models.Model):
     total_amount = models.DecimalField(blank=True, null=True, decimal_places=2, max_digits=10,
-                                       verbose_name='Amount Total')
+                                       verbose_name='Общий баланс проекта')
     user_balance_total = models.DecimalField(blank=True, null=True, decimal_places=2, max_digits=10,
-                                             verbose_name='User balance total')
+                                             verbose_name='Доход пользователей от реферальной программы')
+
+    def __str__(self):
+        return f'[Общий доход проекта: * {str(self.total_amount)} (RUB) *] [Доход пользователей от реферальной программы: * {str(self.user_balance_total)} (RUB) *]'
 
     class Meta:
-        verbose_name = 'Income Information'
-        verbose_name_plural = 'Income Information'
+        verbose_name = 'Доход'
+        verbose_name_plural = 'Доходы'
 
 
 class Price(models.Model):
@@ -195,14 +219,30 @@ class Price(models.Model):
 
 
 class WithdrawalRequest(models.Model):
-    user = models.ForeignKey(TelegramUser, on_delete=models.CASCADE, verbose_name='User')
-    amount = models.DecimalField(blank=True, null=True, max_digits=10, decimal_places=2, verbose_name='Amount')
-    status = models.BooleanField(default=False, verbose_name='Status')
-    currency = models.CharField(blank=True, max_length=1000, verbose_name='Currency')
-    timestamp = models.DateTimeField(blank=True, null=True, verbose_name='Timestamp')
+    user = models.ForeignKey(TelegramUser, on_delete=models.CASCADE, verbose_name='Пользователь')
+    amount = models.DecimalField(blank=True, null=True, max_digits=10, decimal_places=2, verbose_name='Количество')
+    status = models.BooleanField(default=False, verbose_name='Статус запроса о выводе средств')
+    currency = models.CharField(blank=True, max_length=1000, verbose_name='Валюта')
+    timestamp = models.DateTimeField(blank=True, null=True, verbose_name='Время')
 
     def __str__(self):
         return f'{self.user} - {self.amount.__str__()} {self.currency} {self.timestamp} - {self.status.__str__()}'
+
+    def save(self, *args, **kwargs):
+        if not self.status:
+            super(WithdrawalRequest, self).save(*args, **kwargs)
+        else:
+            # При изменении статуса на True, вычитаем средства из дохода всех пользователей
+            # Вычитаем доход из пользователя
+            # Создаём объект транзакции на вывод средств
+            user_balance_total = IncomeInfo.objects.get(pk=1).user_balance_total
+            IncomeInfo.objects.filter(id=1).update(user_balance_total=user_balance_total - self.amount)
+            income = TelegramUser.objects.get(user_id=self.user.user_id).income
+            TelegramUser.objects.filter(user_id=self.user.user_id).update(income=income - self.amount)
+            Transaction.objects.create(user=self.user, income_info=IncomeInfo.objects.get(pk=1),
+                                       timestamp=datetime.now(), currency=self.currency, amount=self.amount,
+                                       side='Вывод средств')
+            super(WithdrawalRequest, self).save(*args, **kwargs)
 
     class Meta:
         verbose_name = 'Withdrawal'
@@ -222,7 +262,8 @@ class Logging(models.Model):
     log_level = models.CharField(max_length=50, null=True, blank=True, choices=LOG_LEVEL, verbose_name='LOG LEVEL')
     message = models.TextField(max_length=4000, null=True, blank=True, verbose_name='Сообщение')
     datetime = models.DateTimeField(auto_now_add=True, verbose_name='Время')
-    user = models.ForeignKey(to='TelegramUser', null=True, blank=True, on_delete=models.SET_NULL, verbose_name='Аккаунт')
+    user = models.ForeignKey(to='TelegramUser', null=True, blank=True, on_delete=models.SET_NULL,
+                             verbose_name='Аккаунт')
 
     class Meta:
         verbose_name = 'Лог'

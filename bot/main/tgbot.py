@@ -21,6 +21,7 @@ from bot.models import IncomeInfo
 from bot.models import ReferralSettings
 from bot.models import Logging
 from bot.models import WithdrawalRequest
+from bot.models import Transaction
 
 from bot.main import msg
 from bot.main import markup
@@ -162,6 +163,8 @@ async def got_payment(message):
     income = float(IncomeInfo.objects.get(pk=1).total_amount)  # Общий доход проекта
     users_balance = float(IncomeInfo.objects.get(pk=1).user_balance_total)  # Общий баланс всех пользователей
     IncomeInfo.objects.all().update(total_amount=income + amount, user_balance_total=users_balance + amount)
+    Transaction.objects.create(user=user, income_info=IncomeInfo.objects.get(pk=1), timestamp=datetime.now(),
+                               currency=currency, amount=amount, side='Приход средств')
 
     referred_list = [x for x in TelegramReferral.objects.filter(referred=user)]
     if referred_list:
@@ -353,15 +356,17 @@ async def callback_query_handlers(call):
                                                                             inv_5_lvl, user_income),
                                    reply_markup=markup.withdraw_funds(call.message.chat.id))
         elif 'withdraw' in data:
-            WithdrawalRequest.objects.create(
-                user=user,
-                amount=user.income,
-                currency='RUB',
-                timestamp=datetime.now(),
-            )
-            await bot.send_message(call.message.chat.id, text=msg.withdraw_request, reply_markup=markup.proceed_to_profile())
-            logger.info(f'[{call.message.chat.first_name}:{call.message.chat.username}:{call.message.chat.id}] [withdrawal request: {user} {user.income}]')
-
+            if user.income >= 500:
+                WithdrawalRequest.objects.create(
+                    user=user,
+                    amount=user.income,
+                    currency='RUB',
+                    timestamp=datetime.now(),
+                )
+                await bot.send_message(call.message.chat.id, text=msg.withdraw_request.format(str(user.income)), reply_markup=markup.proceed_to_profile())
+                logger.info(f'[{call.message.chat.first_name} : {call.message.chat.username} : {call.message.chat.id}] [withdrawal request: {user} {user.income}]')
+            else:
+                await bot.send_message(call.message.chat.id, text=msg.withdraw_request_not_enough.format(str(user.income)), reply_markup=markup.proceed_to_profile())
         elif 'help' in data:
             await bot.send_message(call.message.chat.id, text=msg.help_message, reply_markup=markup.start(),
                                    parse_mode='HTML')
