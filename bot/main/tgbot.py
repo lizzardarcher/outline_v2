@@ -34,7 +34,6 @@ logging.basicConfig(
     level=logging.DEBUG,
     datefmt='%Y.%m.%d %I:%M:%S',
     handlers=[
-        # RotatingFileHandler(filename='log/log.log', maxBytes=1024*1024, backupCount=5),
         TimedRotatingFileHandler(filename='log/bot_log.log', when='D', interval=1, backupCount=5),
         logging.StreamHandler(stream=sys.stderr)
               ],
@@ -74,7 +73,6 @@ async def start(message):
         except:
             ...
         await bot.send_message(chat_id=message.chat.id, text=msg.start_message.format(message.from_user.first_name))
-        # await bot.send_message(chat_id=message.chat.id, text=msg.main_menu)
         await bot.send_message(chat_id=message.chat.id, text=msg.main_menu_choice, reply_markup=markup.start())
 
 
@@ -353,7 +351,7 @@ async def callback_query_handlers(call):
                                                                             inv_5_lvl, user_income),
                                    reply_markup=markup.withdraw_funds(call.message.chat.id))
         elif 'withdraw' in data:
-            await send_dummy()
+            await bot.send_message(call.message.chat.id, text=msg.withdraw_request, reply_markup=markup.proceed_to_profile())
 
         elif 'help' in data:
             await bot.send_message(call.message.chat.id, text=msg.help_message, reply_markup=markup.start(),
