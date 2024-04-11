@@ -80,21 +80,21 @@ class TelegramUserAdmin(admin.ModelAdmin):
         return actions
 
 
-@admin.register(TelegramBot)
-class TelegramBotAdmin(admin.ModelAdmin):
-    list_display = ('title', 'token', 'username', 'created_at')
-
-    def has_add_permission(self, request):
-        if TelegramBot.objects.all():
-            return False
-        else:
-            return True
-
-    def get_actions(self, request):
-        actions = super().get_actions(request)
-        if 'delete_selected' in actions:
-            del actions['delete_selected']
-        return actions
+# @admin.register(TelegramBot)
+# class TelegramBotAdmin(admin.ModelAdmin):
+#     list_display = ('title', 'token', 'username', 'created_at')
+#
+#     def has_add_permission(self, request):
+#         if TelegramBot.objects.all():
+#             return False
+#         else:
+#             return True
+#
+#     def get_actions(self, request):
+#         actions = super().get_actions(request)
+#         if 'delete_selected' in actions:
+#             del actions['delete_selected']
+#         return actions
 
 
 @admin.register(TelegramReferral)
