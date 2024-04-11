@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import os
 import traceback
 import sys
 from pathlib import Path
@@ -68,6 +69,31 @@ async def update_user_subscription_status():
         await asyncio.sleep(360)
     except Exception as e:
         logger.error(traceback.format_exc())
+
+
+async def file_event_handler() -> None:
+    wsgi = Path(__file__).resolve().parent.parent.joinpath('outline_v2').joinpath('wsgi.py')
+    folder = Path(__file__).resolve().parent.parent
+
+    from watchdog.observers import Observer
+    from watchdog.events import FileSystemEventHandler
+
+    class EventHandler(FileSystemEventHandler):
+        def on_any_event(self, event):
+            os.system(f'touch {wsgi}')
+
+    path = f"{folder}"
+    event_handler = EventHandler()
+    observer = Observer()
+    observer.schedule(event_handler, path, recursive=True)
+    observer.start()
+    try:
+        while True:
+            await asyncio.sleep(1)
+    except KeyboardInterrupt:
+        observer.stop()
+    observer.join()
+
 
 
 @bot.message_handler(commands=['test'])
@@ -421,6 +447,7 @@ async def callback_query_handlers(call):
 
 if __name__ == '__main__':
     loop = asyncio.get_event_loop()
-    loop.create_task(bot.polling(non_stop=True))
-    loop.create_task(update_user_subscription_status())
+    loop.create_task(bot.polling(non_stop=True))  # TELEGRAM BOT
+    loop.create_task(update_user_subscription_status())  # SUBSCRIPTION REDEEM ON EXPIRATION
+    loop.create_task(file_event_handler())  # APACHE2 RELOAD ON FILES CHANGE
     loop.run_forever()
