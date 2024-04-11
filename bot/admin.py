@@ -188,21 +188,21 @@ class IncomeInfo(admin.ModelAdmin):
     inlines = [TransactionInline]
 
 
-# @admin.register(VpnKey)
-# class VpnKey(admin.ModelAdmin):
-#     list_display = ('user', 'server', 'access_url', 'data_limit', 'created_at')
-#     list_display_links = ('user', 'server', 'access_url', 'data_limit', 'created_at')
-#
-#     def has_change_permission(self, request, obj=None):
-#         return False
-#
-#
-# @admin.register(Server)
-# class ServerAdmin(admin.ModelAdmin):
-#     list_display = (
-#         'hosting', 'ip_address', 'user', 'password', 'rental_price', 'max_keys', 'keys_generated', 'is_active',
-#         'created_at')
-#     inlines = [VpnKeyInline]
+@admin.register(VpnKey)
+class VpnKey(admin.ModelAdmin):
+    list_display = ('user', 'server', 'access_url', 'data_limit', 'created_at')
+    list_display_links = ('user', 'server', 'access_url', 'data_limit', 'created_at')
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+
+@admin.register(Server)
+class ServerAdmin(admin.ModelAdmin):
+    list_display = (
+        'hosting', 'ip_address', 'user', 'password', 'rental_price', 'max_keys', 'keys_generated', 'is_active',
+        'created_at')
+    inlines = [VpnKeyInline]
 
 
 # @admin.register(Price)
