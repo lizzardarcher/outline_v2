@@ -424,4 +424,3 @@ if __name__ == '__main__':
     loop.create_task(bot.polling(non_stop=True))
     loop.create_task(update_user_subscription_status())
     loop.run_forever()
-    # asyncio.run(bot.polling(non_stop=True))
