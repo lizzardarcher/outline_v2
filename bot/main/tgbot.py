@@ -7,6 +7,8 @@ from pathlib import Path
 from logging.handlers import RotatingFileHandler, TimedRotatingFileHandler
 from math import ceil
 from datetime import datetime, timedelta, date
+from watchdog.observers import Observer
+from watchdog.events import FileSystemEventHandler
 
 from django.conf import settings
 from telebot.async_telebot import AsyncTeleBot
@@ -72,14 +74,11 @@ async def update_user_subscription_status():
 
 
 async def file_event_handler() -> None:
-    wsgi = Path(__file__).resolve().parent.parent.joinpath('outline_v2').joinpath('wsgi.py')
     folder = Path(__file__).resolve().parent.parent
-
-    from watchdog.observers import Observer
-    from watchdog.events import FileSystemEventHandler
 
     class EventHandler(FileSystemEventHandler):
         def on_any_event(self, event):
+            wsgi = Path(__file__).resolve().parent.parent.joinpath('outline_v2').joinpath('wsgi.py')
             os.system(f'touch {wsgi}')
 
     path = f"{folder}"
