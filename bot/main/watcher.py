@@ -25,4 +25,6 @@ async def file_event_handler() -> None:
     observer.join()
 
 if __name__ == '__main__':
+    wsgi = Path(__file__).parent.parent.parent.joinpath('outline_v2').joinpath('wsgi.py').resolve()
+    print(wsgi)
     asyncio.run(file_event_handler())
