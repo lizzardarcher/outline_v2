@@ -15,7 +15,7 @@ async def file_event_handler() -> None:
 
     event_handler = EventHandler()
     observer = Observer()
-    observer.schedule(event_handler, f"{Path(__file__).resolve().parent.parent.joinpath('admin.py')}", recursive=False)
+    observer.schedule(event_handler, f"{Path(__file__).resolve().parent.parent.joinpath('admin.py')}" , recursive=False)
     observer.schedule(event_handler, f"{Path(__file__).resolve().parent.parent.joinpath('models.py')}", recursive=False)
     observer.start()
     try:
@@ -27,4 +27,6 @@ async def file_event_handler() -> None:
 
 
 if __name__ == '__main__':
+    print(f"{Path(__file__).resolve().parent.parent.joinpath('admin.py')}" )
+    print(f"{Path(__file__).resolve().parent.parent.joinpath('models.py')}")
     asyncio.run(file_event_handler())
