@@ -15,13 +15,13 @@ async def file_event_handler() -> None:
 
     event_handler = EventHandler()
     observer = Observer()
-    observer.schedule(event_handler, f"{Path(__file__).resolve().parent.parent.joinpath('admin.py')}" , recursive=False)
-    observer.schedule(event_handler, f"{Path(__file__).resolve().parent.parent.joinpath('models.py')}", recursive=False)
+    observer.schedule(event_handler, path=f"{Path(__file__).resolve().parent.parent.joinpath('admin.py')}" , recursive=False)
+    observer.schedule(event_handler, path=f"{Path(__file__).resolve().parent.parent.joinpath('models.py')}", recursive=False)
     observer.start()
     try:
         while True:
             await asyncio.sleep(1)
-    except KeyboardInterrupt:
+    finally:
         observer.stop()
         observer.join()
 
