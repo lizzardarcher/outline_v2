@@ -19,7 +19,6 @@ from bot.models import Server
 from bot.models import Country
 from bot.models import IncomeInfo
 from bot.models import ReferralSettings
-from bot.models import Logging
 from bot.models import WithdrawalRequest
 from bot.models import Transaction
 

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="PublishConfigData" autoUpload="Always" serverName="94.198.216.54" remoteFilesAllowedToDisappearOnAutoupload="false">
+    <serverData>
+      <paths name="94.198.216.54">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/var/www/html/outline_v2" local="$PROJECT_DIR$" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
+    </serverData>
+    <option name="myAutoUpload" value="ALWAYS" />
+  </component>
+</project>
