@@ -24,5 +24,3 @@ def return_matches(a: list, b: list) -> list:
         if i in b:
             matches.append(i)
     return matches
-
-

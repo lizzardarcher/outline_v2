@@ -7,18 +7,16 @@ from watchdog.events import FileSystemEventHandler
 
 
 async def file_event_handler() -> None:
-    folder = Path(__file__).resolve().parent.parent
-
     class EventHandler(FileSystemEventHandler):
         def on_modified(self, event):
             print(event)
             wsgi = Path(__file__).parent.parent.parent.joinpath('outline_v2').joinpath('wsgi.py').resolve()
             os.system(f'touch {wsgi}')
 
-    path = f"{folder}"
     event_handler = EventHandler()
     observer = Observer()
-    observer.schedule(event_handler, path, recursive=True)
+    observer.schedule(event_handler, f"{Path(__file__).resolve().parent.parent.joinpath('admin.py')}", recursive=False)
+    observer.schedule(event_handler, f"{Path(__file__).resolve().parent.parent.joinpath('models.py')}", recursive=False)
     observer.start()
     try:
         while True:
@@ -29,6 +27,4 @@ async def file_event_handler() -> None:
 
 
 if __name__ == '__main__':
-    wsgi = Path(__file__).parent.parent.parent.joinpath('outline_v2').joinpath('wsgi.py').resolve()
-    print(wsgi)
     asyncio.run(file_event_handler())
