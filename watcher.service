@@ -1,0 +1,16 @@
+[Unit]
+Description=Service to force apache 2 to reload on specified file change
+After=syslog.target
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/var/www/html/outline_v2
+Environment="PYTHONPATH=/var/www/html/outline_v2"
+ExecStart=/var/www/html/outline_v2/.venv/bin/python3.10 /var/www/html/outline_v2/bot/main/watcher.py
+RestartSec=10
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
