@@ -9,7 +9,7 @@ async def file_event_handler() -> None:
 
     class EventHandler(FileSystemEventHandler):
         def on_any_event(self, event):
-            wsgi = Path(__file__).resolve().parent.parent.joinpath('outline_v2').joinpath('wsgi.py')
+            wsgi = Path(__file__).parent.parent.joinpath('outline_v2').joinpath('wsgi.py').resolve()
             os.system(f'touch {wsgi}')
 
     path = f"{folder}"
