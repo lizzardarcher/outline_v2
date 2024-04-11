@@ -87,6 +87,7 @@ class Transaction(models.Model):
         verbose_name = 'Транзакция'
         verbose_name_plural = 'Транзакции'
 
+
 class VpnKey(models.Model):
     created_at = models.DateField(auto_now_add=True, verbose_name='Создано')
     server = models.ForeignKey(to='Server', on_delete=models.CASCADE, verbose_name='Сервер', blank=True, null=True)
