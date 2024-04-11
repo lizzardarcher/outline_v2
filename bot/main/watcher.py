@@ -23,7 +23,7 @@ async def file_event_handler() -> None:
             await asyncio.sleep(1)
     except KeyboardInterrupt:
         observer.stop()
-    observer.join()
+        observer.join()
 
 
 if __name__ == '__main__':
