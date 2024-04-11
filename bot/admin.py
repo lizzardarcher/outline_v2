@@ -84,7 +84,6 @@ class TelegramUserAdmin(admin.ModelAdmin):
 class TelegramBotAdmin(admin.ModelAdmin):
     list_display = ('title', 'token', 'username', 'created_at')
 
-
     def has_add_permission(self, request):
         if TelegramBot.objects.all():
             return False
