@@ -195,8 +195,8 @@ class IncomeInfo(admin.ModelAdmin):
 #
 #     def has_change_permission(self, request, obj=None):
 #         return False
-
-
+#
+#
 # @admin.register(Server)
 # class ServerAdmin(admin.ModelAdmin):
 #     list_display = (
