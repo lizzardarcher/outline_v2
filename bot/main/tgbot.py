@@ -39,7 +39,7 @@ logging.basicConfig(
     handlers=[
         TimedRotatingFileHandler(filename=log_path, when='D', interval=1, backupCount=5),
         logging.StreamHandler(stream=sys.stderr)
-              ],
+    ],
 )
 
 bot = AsyncTeleBot(TelegramBot.objects.get(pk=1).token)
@@ -51,8 +51,23 @@ def update_sub_status(user: TelegramUser):
     exp_date = user.subscription_expiration
     if exp_date < datetime.now().date():
         TelegramUser.objects.filter(user_id=user.user_id).update(subscription_status=False)
+        # key_id = VpnKey.objects.filter(user=user).last().key_id
+        # delete_user_keys(user=user)
     else:
         TelegramUser.objects.filter(user_id=user.user_id).update(subscription_status=True)
+
+
+async def update_user_subscription_status():
+    try:
+        list_users = [x for x in TelegramUser.objects.all()]
+        for user in list_users:
+            exp_date = user.subscription_expiration
+            if exp_date < datetime.now().date():
+                TelegramUser.objects.filter(user_id=user.user_id).update(subscription_status=False)
+                await delete_user_keys(user=user)
+        await asyncio.sleep(360)
+    except Exception as e:
+        logger.error(traceback.format_exc())
 
 
 @bot.message_handler(commands=['test'])
@@ -63,7 +78,8 @@ async def start(message):
 @bot.message_handler(commands=['start'])
 async def start(message):
     if message.chat.type == 'private':
-        logger.info(f'[{message.from_user.first_name} : {message.from_user.username} : {message.from_user.id}] [msg: {message.text}]')
+        logger.info(
+            f'[{message.from_user.first_name} : {message.from_user.username} : {message.from_user.id}] [msg: {message.text}]')
         try:
             TelegramUser.objects.create(user_id=message.from_user.id,
                                         username=message.from_user.username,
@@ -82,14 +98,16 @@ async def start(message):
 @bot.message_handler(content_types=['text'])
 async def handle_referral(message):
     if message.chat.type == 'private':
-        logger.info(f'[{message.from_user.first_name} : {message.from_user.username} : {message.from_user.id}] [msg: {message.text}]')
+        logger.info(
+            f'[{message.from_user.first_name} : {message.from_user.username} : {message.from_user.id}] [msg: {message.text}]')
         update_sub_status(user=TelegramUser.objects.get(user_id=message.chat.id))
         if 'start=' in message.text:
             referred_by = message.text.split('=')[-1]
             same_user_check = str(referred_by) == str(message.chat.id)
             if not same_user_check:
                 try:
-                    await bot.send_message(message.chat.id, text=f"Вы были приглашены пользователем с ID: {referred_by}")
+                    await bot.send_message(message.chat.id,
+                                           text=f"Вы были приглашены пользователем с ID: {referred_by}")
 
                     referrer = TelegramUser.objects.get(user_id=referred_by)  # тот, от кого получена ссылка
                     referred = TelegramUser.objects.get(user_id=message.chat.id)  # тот, кто воспользовался ссылкой
@@ -151,7 +169,7 @@ async def checkout(pre_checkout_query):
 async def got_payment(message):
     payment = message.successful_payment
     logger.info(f'[{message.chat.first_name} : {message.chat.username} : {message.chat.id}] '
-                f'[successful payment: {str(int(payment.total_amount)/100)} {payment.currency} | {payment}]')
+                f'[successful payment: {str(int(payment.total_amount) / 100)} {payment.currency} | {payment}]')
 
     user = TelegramUser.objects.get(user_id=message.chat.id)
     amount = float(message.successful_payment.total_amount / 100)
@@ -195,7 +213,8 @@ async def got_payment(message):
 @bot.callback_query_handler(func=lambda call: True)
 async def callback_query_handlers(call):
     data = call.data.split(':')
-    logger.info(f'[{call.message.chat.first_name}:{call.message.chat.username}:{call.message.chat.id}] [data: {call.data}]')
+    logger.info(
+        f'[{call.message.chat.first_name}:{call.message.chat.username}:{call.message.chat.id}] [data: {call.data}]')
     user = TelegramUser.objects.get(user_id=call.message.chat.id)
     update_sub_status(user=user)
     country_list = [x.name for x in Country.objects.all()]
@@ -267,7 +286,8 @@ async def callback_query_handlers(call):
                     await bot.send_message(call.message.chat.id, text=msg.top_up_balance)
                     TelegramUser.objects.filter(user_id=user.user_id).update(top_up_balance_listener=True)
                 elif 'usdt' in data:
-                    await bot.send_message(call.message.chat.id, text=msg.usdt_message, reply_markup=markup.proceed_to_profile())
+                    await bot.send_message(call.message.chat.id, text=msg.usdt_message,
+                                           reply_markup=markup.proceed_to_profile())
                 elif 'details' in data:
                     price = LabeledPrice(label='test', amount=int(data[-2]) * 100)
                     await bot.send_invoice(
@@ -363,7 +383,9 @@ async def callback_query_handlers(call):
             timestamp = WithdrawalRequest.objects.filter(user=user).last().timestamp
 
             if timestamp.date() == date.today():
-                await bot.send_message(call.message.chat.id, text=msg.withdraw_request_duplicate.format(str(user.income)), reply_markup=markup.proceed_to_profile())
+                await bot.send_message(call.message.chat.id,
+                                       text=msg.withdraw_request_duplicate.format(str(user.income)),
+                                       reply_markup=markup.proceed_to_profile())
             elif user.income >= 500:
                 WithdrawalRequest.objects.create(
                     user=user,
@@ -371,10 +393,14 @@ async def callback_query_handlers(call):
                     currency='RUB',
                     timestamp=datetime.now(),
                 )
-                await bot.send_message(call.message.chat.id, text=msg.withdraw_request.format(str(user.income)), reply_markup=markup.proceed_to_profile())
-                logger.info(f'[{call.message.chat.first_name} : {call.message.chat.username} : {call.message.chat.id}] [withdrawal request: {user} {user.income}]')
+                await bot.send_message(call.message.chat.id, text=msg.withdraw_request.format(str(user.income)),
+                                       reply_markup=markup.proceed_to_profile())
+                logger.info(
+                    f'[{call.message.chat.first_name} : {call.message.chat.username} : {call.message.chat.id}] [withdrawal request: {user} {user.income}]')
             else:
-                await bot.send_message(call.message.chat.id, text=msg.withdraw_request_not_enough.format(str(user.income)), reply_markup=markup.proceed_to_profile())
+                await bot.send_message(call.message.chat.id,
+                                       text=msg.withdraw_request_not_enough.format(str(user.income)),
+                                       reply_markup=markup.proceed_to_profile())
 
         elif 'help' in data:
             await bot.send_message(call.message.chat.id, text=msg.help_message, reply_markup=markup.start(),
@@ -392,5 +418,10 @@ async def callback_query_handlers(call):
         elif 'back' in data:
             await bot.send_message(chat_id=call.message.chat.id, text=msg.main_menu_choice, reply_markup=markup.start())
 
+
 if __name__ == '__main__':
-    asyncio.run(bot.polling(non_stop=True))
+    loop = asyncio.get_event_loop()
+    loop.create_task(bot.polling(non_stop=True))
+    loop.create_task(update_user_subscription_status())
+    loop.run_forever()
+    # asyncio.run(bot.polling(non_stop=True))
