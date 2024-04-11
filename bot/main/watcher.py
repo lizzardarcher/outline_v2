@@ -10,7 +10,8 @@ async def file_event_handler() -> None:
     folder = Path(__file__).resolve().parent.parent
 
     class EventHandler(FileSystemEventHandler):
-        def on_any_event(self, event):
+        def on_modified(self, event):
+            print(event)
             wsgi = Path(__file__).parent.parent.parent.joinpath('outline_v2').joinpath('wsgi.py').resolve()
             os.system(f'touch {wsgi}')
 
