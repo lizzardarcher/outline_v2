@@ -4,12 +4,14 @@ from pathlib import Path
 
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
+
+
 async def file_event_handler() -> None:
     folder = Path(__file__).resolve().parent.parent
 
     class EventHandler(FileSystemEventHandler):
         def on_any_event(self, event):
-            wsgi = Path(__file__).parent.parent.joinpath('outline_v2').joinpath('wsgi.py').resolve()
+            wsgi = Path(__file__).parent.parent.parent.joinpath('outline_v2').joinpath('wsgi.py').resolve()
             os.system(f'touch {wsgi}')
 
     path = f"{folder}"
@@ -23,6 +25,7 @@ async def file_event_handler() -> None:
     except KeyboardInterrupt:
         observer.stop()
     observer.join()
+
 
 if __name__ == '__main__':
     wsgi = Path(__file__).parent.parent.parent.joinpath('outline_v2').joinpath('wsgi.py').resolve()
