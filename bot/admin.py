@@ -29,6 +29,7 @@ class WithdrawalRequestInline(admin.TabularInline):
 class TransactionInline(admin.TabularInline):
     model = Transaction
     fields = ('user', 'amount', 'currency', 'side')
+
     def has_add_permission(self, request, obj):
         return False
 
@@ -59,7 +60,9 @@ class TelegramUserAdmin(admin.ModelAdmin):
     list_display_links = (
         'join_date', 'first_name', 'last_name', 'username', 'subscription_status', 'subscription_expiration')
     search_fields = ('first_name', 'last_name', 'username', 'user_id')
-    readonly_fields = ('join_date', 'first_name', 'last_name', 'username', 'user_id', 'balance', 'income', 'subscription_status', 'subscription_expiration')
+    readonly_fields = (
+    'join_date', 'first_name', 'last_name', 'username', 'user_id', 'balance', 'income', 'subscription_status',
+    'subscription_expiration')
     exclude = ('data_limit', 'is_banned', 'top_up_balance_listener', 'withdrawal_listener')
     ordering = ('-subscription_status', 'subscription_expiration',)
     empty_value_display = '---'
@@ -185,6 +188,7 @@ class IncomeInfo(admin.ModelAdmin):
 
     inlines = [TransactionInline]
 
+
 @admin.register(VpnKey)
 class VpnKey(admin.ModelAdmin):
     list_display = ('user', 'server', 'access_url', 'data_limit', 'created_at')
@@ -221,7 +225,6 @@ class ServerAdmin(admin.ModelAdmin):
 class CountryAdmin(admin.ModelAdmin):
     list_display = ('preset_id', 'name')
     list_display_links = ('preset_id', 'name')
-
 
 # @admin.register(Logging)
 # class LoggingAdmin(admin.ModelAdmin):
