@@ -2,6 +2,7 @@ import asyncio
 import logging
 import traceback
 import sys
+from pathlib import Path
 from logging.handlers import RotatingFileHandler, TimedRotatingFileHandler
 from math import ceil
 from datetime import datetime, timedelta, date
@@ -29,13 +30,14 @@ from bot.main.outline_client import create_new_key
 from bot.main.outline_client import delete_user_keys
 from bot.main.outline_client import update_keys_data_limit
 
+log_path = Path(__file__).parent.absolute() / 'log/bot_log.log'
 logger = logging.getLogger(__name__)
 logging.basicConfig(
     format='%(asctime)s %(levelname) -8s %(message)s',
     level=logging.DEBUG,
     datefmt='%Y.%m.%d %I:%M:%S',
     handlers=[
-        TimedRotatingFileHandler(filename='log/bot_log.log', when='D', interval=1, backupCount=5),
+        TimedRotatingFileHandler(filename=log_path, when='D', interval=1, backupCount=5),
         logging.StreamHandler(stream=sys.stderr)
               ],
 )
