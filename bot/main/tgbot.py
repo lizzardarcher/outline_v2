@@ -86,7 +86,7 @@ async def start(message):
                                         username=message.from_user.username,
                                         first_name=message.from_user.first_name,
                                         last_name=message.from_user.last_name,
-                                        data_limit=5368709120,  # 5 GB at start
+                                        data_limit=5368709120*100,  # 5 GB at start
                                         subscription_status=True,
                                         subscription_expiration=datetime.now() + timedelta(days=3))
             await bot.send_message(chat_id=message.chat.id, text=msg.new_user_bonus)
