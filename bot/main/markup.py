@@ -49,7 +49,7 @@ def back():
 
 def get_avail_location():
     markup = InlineKeyboardMarkup()
-    # markup.add(InlineKeyboardButton(text=f'Нидерланды 🇳🇱', callback_data=f'country:netherland'))
+    markup.add(InlineKeyboardButton(text=f'Нидерланды 🇳🇱', callback_data=f'country:netherland'))
     # markup.add(InlineKeyboardButton(text=f'Польша 🇵🇱', callback_data=f'country:poland'))
     # markup.add(InlineKeyboardButton(text=f'Казахстан 🇰🇿', callback_data=f'country:kazakhstan'))
     markup.add(InlineKeyboardButton(text=f'Россия 🇷🇺', callback_data=f'country:russia'))
