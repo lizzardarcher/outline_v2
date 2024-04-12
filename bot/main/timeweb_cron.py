@@ -20,7 +20,7 @@ logging.basicConfig(
     level=logging.DEBUG,
     datefmt='%Y.%m.%d %I:%M:%S',
     handlers=[
-        RotatingFileHandler(filename='log/tw_log.log', maxBytes=1024*1024, backupCount=5),
+        # RotatingFileHandler(filename='log/tw_log.log', maxBytes=1024*1024, backupCount=5),
         # TimedRotatingFileHandler(filename='log/tw_log.log', when='D', interval=1, backupCount=5),
         logging.StreamHandler(stream=sys.stderr)
               ],
