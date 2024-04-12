@@ -60,8 +60,7 @@ class TelegramUserAdmin(admin.ModelAdmin):
     list_display_links = (
         'join_date', 'first_name', 'last_name', 'username', 'subscription_status', 'subscription_expiration')
     search_fields = ('first_name', 'last_name', 'username', 'user_id')
-    readonly_fields = ('join_date', 'first_name', 'last_name', 'username', 'user_id', 'income', 'subscription_status',
-                       'subscription_expiration')
+    readonly_fields = ('join_date', 'first_name', 'last_name', 'username', 'user_id', 'income')
     exclude = ('data_limit', 'is_banned', 'top_up_balance_listener', 'withdrawal_listener')
     ordering = ('-subscription_status', 'subscription_expiration',)
     empty_value_display = '---'
