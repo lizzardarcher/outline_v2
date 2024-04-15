@@ -9,8 +9,9 @@ from watchdog.events import FileSystemEventHandler
 class EventHandler(FileSystemEventHandler):
     def on_any_event(self, event):
         print(event)
-        wsgi = Path(__file__).parent.parent.parent.joinpath('outline_v2').joinpath('wsgi.py').resolve()
-        os.system(f'touch {wsgi}')
+        # wsgi = Path(__file__).parent.parent.parent.joinpath('outline_v2').joinpath('wsgi.py').resolve()
+        # os.system(f'touch {wsgi}')
+        os.system(f'apachectl -k graceful')
 
 
 if __name__ == '__main__':
