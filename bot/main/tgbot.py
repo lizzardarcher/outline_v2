@@ -92,9 +92,9 @@ async def start(message):
             await bot.send_message(chat_id=message.chat.id, text=msg.new_user_bonus)
         except:
             ...
-        await bot.send_message(chat_id=message.chat.id, text=msg.start_message.format(message.from_user.first_name))
+        await bot.send_message(chat_id=message.chat.id, text=msg.start_message.format(message.from_user.first_name), reply_markup=markup.get_app_or_start())
         # await bot.send_message(chat_id=message.chat.id, text=msg.main_menu_choice, reply_markup=markup.start())
-        await bot.send_message(chat_id=message.chat.id, text=msg.main_menu_choice, reply_markup=markup.get_app_or_start())
+        # await bot.send_message(chat_id=message.chat.id, text=msg.main_menu_choice, reply_markup=markup.get_app_or_start())
 
 
 @bot.message_handler(content_types=['text'])

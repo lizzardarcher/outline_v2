@@ -25,7 +25,7 @@ def start():
     btn4 = InlineKeyboardButton(text=f'ℹ Информация', callback_data=f'common_info')
     btn5 = InlineKeyboardButton(text=f'📲 Скачать приложение', callback_data=f'download_app')
     markup.row(btn1, btn2)
-    markup.row(btn3, btn4)
+    markup.row(btn4, btn3)
     markup.row(btn5)
     return markup
 
@@ -37,6 +37,7 @@ def download_app():
     markup.add(InlineKeyboardButton(text=f'💻 Windows', url=f'https://s3.amazonaws.com/outline-releases/client/windows/stable/Outline-Client.exe'))
     markup.add(InlineKeyboardButton(text=f'💻 MacOS', url=f'https://apps.apple.com/ru/app/outline-secure-internet-access/id1356178125'))
     markup.add(InlineKeyboardButton(text=f'💻 Linux', url=f'https://s3.amazonaws.com/outline-releases/client/linux/stable/Outline-Client.AppImage'))
+    markup.add(InlineKeyboardButton(text=f'Приложение установлено 👌', callback_data=f'app_installed'))
     markup.add(btn_back)
     return markup
 
