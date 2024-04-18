@@ -264,7 +264,7 @@ async def callback_query_handlers(call):
                     country = call.data.split('_')[-1]
                     key = await create_new_key(
                         server=Server.objects.filter(country__name=country, keys_generated__lte=100).last(), user=user)
-                    await bot.send_message(call.message.chat.id, text=f'{msg.key_avail}:\n<code>{key}</code>',
+                    await bot.send_message(call.message.chat.id, text=f'{msg.key_avail}\n<code>{key}</code>',
                                            reply_markup=markup.key_menu(country))
                 except:
                     logger.error(f'{traceback.format_exc()}')
@@ -277,7 +277,7 @@ async def callback_query_handlers(call):
                     country = call.data.split('_')[-1]
                     key = await create_new_key(
                         server=Server.objects.filter(country__name=country, keys_generated__lte=100).last(), user=user)
-                    await bot.send_message(call.message.chat.id, text=f'{msg.key_avail}:\n<code>{key}</code>',
+                    await bot.send_message(call.message.chat.id, text=f'{msg.key_avail}\n<code>{key}</code>',
                                            reply_markup=markup.key_menu(country))
                 except:
                     logger.error(f'{traceback.format_exc()}')
