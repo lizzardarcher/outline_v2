@@ -15,17 +15,18 @@ class EventHandler(FileSystemEventHandler):
 
 
 if __name__ == '__main__':
-
-    event_handler = EventHandler()
-    observer = Observer()
-    observer.schedule(event_handler, path=f"{Path(__file__).resolve().parent.parent.joinpath('admin.py')}",
-                      recursive=True)
-    # observer.schedule(event_handler, path=f"{Path(__file__).resolve().parent.parent.joinpath('models.py')}",
-    #                   recursive=False)
-    observer.start()
-    try:
-        while True:
-            time.sleep(1)
-    except:
-        observer.stop()
-    observer.join()
+    while True:
+        event_handler = EventHandler()
+        observer = Observer()
+        observer.schedule(event_handler, path=f"{Path(__file__).resolve().parent.parent.joinpath('admin.py')}",
+                          recursive=True)
+        # observer.schedule(event_handler, path=f"{Path(__file__).resolve().parent.parent.joinpath('models.py')}",
+        #                   recursive=False)
+        observer.start()
+        try:
+            while True:
+                time.sleep(1)
+        except:
+            # observer.stop()
+            observer.join()
+        time.sleep(1)

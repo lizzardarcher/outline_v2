@@ -93,7 +93,8 @@ async def start(message):
         except:
             ...
         await bot.send_message(chat_id=message.chat.id, text=msg.start_message.format(message.from_user.first_name))
-        await bot.send_message(chat_id=message.chat.id, text=msg.main_menu_choice, reply_markup=markup.start())
+        # await bot.send_message(chat_id=message.chat.id, text=msg.main_menu_choice, reply_markup=markup.start())
+        await bot.send_message(chat_id=message.chat.id, text=msg.main_menu_choice, reply_markup=markup.get_app_or_start())
 
 
 @bot.message_handler(content_types=['text'])
@@ -226,7 +227,13 @@ async def callback_query_handlers(call):
     if call.message.chat.type == 'private':
         await bot.delete_message(call.message.chat.id, call.message.message_id)
 
-        if 'manage' in data:
+        if 'download_app' in data:
+            await bot.send_message(call.message.chat.id, text=msg.download_app, reply_markup=markup.download_app())
+
+        elif 'app_installed' in data:
+            await bot.send_message(chat_id=call.message.chat.id, text=msg.main_menu_choice, reply_markup=markup.start())
+
+        elif 'manage' in data:
             await bot.send_message(call.message.chat.id, msg.avail_location_choice,
                                    reply_markup=markup.get_avail_location())
         elif 'country' in data:
@@ -412,9 +419,6 @@ async def callback_query_handlers(call):
 
         elif 'common_info' in data:
             await bot.send_message(call.message.chat.id, text=msg.commom_info, reply_markup=markup.help_markup())
-
-        elif 'download_app' in data:
-            await bot.send_message(call.message.chat.id, text=msg.download_app, reply_markup=markup.download_app())
 
         elif 'back' in data:
             await bot.send_message(chat_id=call.message.chat.id, text=msg.main_menu_choice, reply_markup=markup.start())
