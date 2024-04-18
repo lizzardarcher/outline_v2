@@ -231,7 +231,7 @@ async def callback_query_handlers(call):
             await bot.send_message(call.message.chat.id, text=msg.download_app, reply_markup=markup.download_app())
 
         elif 'app_installed' in data:
-            await bot.send_message(chat_id=call.message.chat.id, text=msg.main_menu_choice, reply_markup=markup.start())
+            await bot.send_message(chat_id=call.message.chat.id, text=msg.app_installed, reply_markup=markup.start())
 
         elif 'manage' in data:
             await bot.send_message(call.message.chat.id, msg.avail_location_choice,
@@ -244,7 +244,7 @@ async def callback_query_handlers(call):
                 if country:
                     try:
                         key = VpnKey.objects.filter(user=user, server__country__name=country).last().access_url
-                        await bot.send_message(call.message.chat.id, text=f'{msg.key_avail}:\n<code>{key}</code>',
+                        await bot.send_message(call.message.chat.id, text=f'{msg.key_avail}\n<code>{key}</code>',
                                                reply_markup=markup.key_menu(country))
                     except:
                         logger.error(f'{traceback.format_exc()}')
