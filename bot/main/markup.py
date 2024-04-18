@@ -11,7 +11,7 @@ btn_back = InlineKeyboardButton(text=f'🔙 Назад', callback_data=f'back')
 
 def get_app_or_start():
     markup = InlineKeyboardMarkup()
-    markup.add(InlineKeyboardButton(text=f'Скачать приложение 🌐', callback_data=f'download_app'))
+    markup.add(InlineKeyboardButton(text=f'📲 Скачать приложение', callback_data=f'download_app'))
     markup.add(InlineKeyboardButton(text=f'Приложение установлено 👌', callback_data=f'app_installed'))
     markup.add(btn_back)
     return markup
