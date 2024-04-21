@@ -430,11 +430,11 @@ async def callback_query_handlers(call):
 
 if __name__ == '__main__':
     loop = asyncio.get_event_loop()
-    # loop.create_task(bot.polling(non_stop=True))  # TELEGRAM BOT
-    loop.create_task(bot.run_webhooks(
-        listen=DOMAIN,
-        certificate=WEBHOOK_SSL_CERT,
-        certificate_key=WEBHOOK_SSL_PRIV
-    ))  # TELEGRAM BOT
+    loop.create_task(bot.polling(non_stop=True))  # TELEGRAM BOT
+    # loop.create_task(bot.run_webhooks(
+    #     listen=DOMAIN,
+    #     certificate=WEBHOOK_SSL_CERT,
+    #     certificate_key=WEBHOOK_SSL_PRIV
+    # ))  # TELEGRAM BOT WITH WEBHOOKS
     loop.create_task(update_user_subscription_status())  # SUBSCRIPTION REDEEM ON EXPIRATION
     loop.run_forever()
