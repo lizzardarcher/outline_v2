@@ -46,6 +46,9 @@ logging.basicConfig(
 bot = AsyncTeleBot(TelegramBot.objects.get(pk=1).token)
 bot.parse_mode = 'HTML'
 DEBUG = settings.DEBUG
+WEBHOOK_SSL_CERT = '/var/www/html/outline_v2/bot/main/webhook_cert.pem'  # Path to the ssl certificate
+WEBHOOK_SSL_PRIV = '/var/www/html/outline_v2/bot/main/webhook_pkey.pem'  # Path to the ssl private key
+DOMAIN = '94.198.216.54' # either domain, or ip address of vps
 
 
 def update_sub_status(user: TelegramUser):
@@ -86,13 +89,14 @@ async def start(message):
                                         username=message.from_user.username,
                                         first_name=message.from_user.first_name,
                                         last_name=message.from_user.last_name,
-                                        data_limit=5368709120*100,  # 5 GB at start
+                                        data_limit=5368709120 * 100,  # 5 GB at start
                                         subscription_status=True,
                                         subscription_expiration=datetime.now() + timedelta(days=30))
             await bot.send_message(chat_id=message.chat.id, text=msg.new_user_bonus)
         except:
             ...
-        await bot.send_message(chat_id=message.chat.id, text=msg.start_message.format(message.from_user.first_name), reply_markup=markup.get_app_or_start())
+        await bot.send_message(chat_id=message.chat.id, text=msg.start_message.format(message.from_user.first_name),
+                               reply_markup=markup.get_app_or_start())
         # await bot.send_message(chat_id=message.chat.id, text=msg.main_menu_choice, reply_markup=markup.start())
         # await bot.send_message(chat_id=message.chat.id, text=msg.main_menu_choice, reply_markup=markup.get_app_or_start())
 
@@ -426,6 +430,11 @@ async def callback_query_handlers(call):
 
 if __name__ == '__main__':
     loop = asyncio.get_event_loop()
-    loop.create_task(bot.polling(non_stop=True))  # TELEGRAM BOT
+    # loop.create_task(bot.polling(non_stop=True))  # TELEGRAM BOT
+    loop.create_task(bot.run_webhooks(
+        listen=DOMAIN,
+        certificate=WEBHOOK_SSL_CERT,
+        certificate_key=WEBHOOK_SSL_PRIV
+    ))  # TELEGRAM BOT
     loop.create_task(update_user_subscription_status())  # SUBSCRIPTION REDEEM ON EXPIRATION
     loop.run_forever()
