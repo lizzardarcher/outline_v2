@@ -48,7 +48,7 @@ bot.parse_mode = 'HTML'
 DEBUG = settings.DEBUG
 WEBHOOK_SSL_CERT = '/var/www/html/outline_v2/bot/main/webhook_cert.pem'  # Path to the ssl certificate
 WEBHOOK_SSL_PRIV = '/var/www/html/outline_v2/bot/main/webhook_pkey.pem'  # Path to the ssl private key
-DOMAIN = '94.198.216.54' # either domain, or ip address of vps
+DOMAIN = '94.198.216.54'  # either domain, or ip address of vps
 
 
 def update_sub_status(user: TelegramUser):
@@ -321,24 +321,28 @@ async def callback_query_handlers(call):
                     )
 
             elif 'sub' in data:
+                '''1 мес - 349 ₽
+                    3 мес - 949 ₽
+                    6 мес - 1 749 ₽
+                    12 мес - 3 149 ₽'''
                 user_balance = user.balance
                 price = None
                 days = None
                 if data[-1] == '1':
-                    price = 150
+                    price = 349
                     days = 31
                 elif data[-1] == '2':
-                    price = 400
+                    price = 949
                     days = 93
                 elif data[-1] == '3':
-                    price = 700
+                    price = 1749
                     days = 186
                 elif data[-1] == '4':
-                    price = 1000
+                    price = 3149
                     days = 366
-                elif data[-1] == '5':
-                    price = 2000
-                    days = 9999
+                # elif data[-1] == '5':
+                #     price = 2000
+                #     days = 9999
                 if user_balance < price:
                     await bot.send_message(call.message.chat.id, text=msg.low_balance,
                                            reply_markup=markup.top_up_balance())
