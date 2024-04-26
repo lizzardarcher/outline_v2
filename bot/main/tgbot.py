@@ -23,6 +23,7 @@ from bot.models import IncomeInfo
 from bot.models import ReferralSettings
 from bot.models import WithdrawalRequest
 from bot.models import Transaction
+from bot.models import GlobalSettings
 
 from bot.main import msg
 from bot.main import markup
@@ -224,7 +225,7 @@ async def callback_query_handlers(call):
     user = TelegramUser.objects.get(user_id=call.message.chat.id)
     update_sub_status(user=user)
     country_list = [x.name for x in Country.objects.all()]
-
+    payment_token = GlobalSettings.objects.get(pk=1).payment_system_api_key
     async def send_dummy():
         await bot.send_message(call.message.chat.id, text=msg.dummy_message, reply_markup=markup.start())
 
@@ -301,13 +302,13 @@ async def callback_query_handlers(call):
                     await bot.send_message(call.message.chat.id, text=msg.usdt_message,
                                            reply_markup=markup.proceed_to_profile())
                 elif 'details' in data:
-                    price = LabeledPrice(label='test', amount=int(data[-2]) * 100)
+                    price = LabeledPrice(label='Пополнение баланса', amount=int(data[-2]) * 100)
                     await bot.send_invoice(
                         chat_id=call.message.chat.id,
                         title='Outline VPN Key',
                         description='Пополнение баланса для генерации ключей Outline VPN',
                         invoice_payload=f'{str(user.user_id)}:{data[-2]}',
-                        provider_token='381764678:TEST:82447',
+                        provider_token=f'{payment_token}',
                         currency='RUB',
                         prices=[price],
                         photo_url='https://bitlaunch.io/blog/content/images/size/w2000/2022/10/Outline-VPN.png',

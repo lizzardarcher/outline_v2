@@ -151,7 +151,7 @@ class Country(models.Model):
 class GlobalSettings(models.Model):
     server_amount = models.IntegerField(blank=True, null=True, verbose_name='Количество сервероа')
     time_web_api_key = models.TextField(max_length=4000, blank=True, null=True, verbose_name='Time Web API Token')
-    payment_system_api_key = models.CharField(max_length=1000, blank=True, null=True, verbose_name='Payment System 1')
+    payment_system_api_key = models.CharField(max_length=1000, blank=True, null=True, verbose_name='Ukassa token')
     # prices = models.ForeignKey(to='Price', on_delete=models.CASCADE, null=True, blank=True, verbose_name='Prices')
     cloud_init = models.TextField(max_length=4000, blank=True, null=True, verbose_name='Cloud Init')
     data_limit = models.BigIntegerField(blank=True, null=True, verbose_name='Data Limit GB')

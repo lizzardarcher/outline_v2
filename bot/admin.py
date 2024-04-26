@@ -17,11 +17,16 @@ class WithdrawalRequestInline(admin.TabularInline):
     model = WithdrawalRequest
 
     def has_add_permission(self, request, obj):
-        return False
+        if not DEBUG:
+            return False
+        else:
+            return True
 
     def has_delete_permission(self, request, obj=None):
-        return False
-
+        if not DEBUG:
+            return False
+        else:
+            return True
     def has_change_permission(self, request, obj=None):
         return False
 
@@ -31,10 +36,16 @@ class TransactionInline(admin.TabularInline):
     fields = ('user', 'amount', 'currency', 'side')
 
     def has_add_permission(self, request, obj):
-        return False
+        if not DEBUG:
+            return False
+        else:
+            return True
 
     def has_delete_permission(self, request, obj=None):
-        return False
+        if not DEBUG:
+            return False
+        else:
+            return True
 
     def has_change_permission(self, request, obj=None):
         return False
@@ -44,10 +55,16 @@ class VpnKeyInline(admin.TabularInline):
     model = VpnKey
 
     def has_add_permission(self, request, obj=None):
-        return False
+        if not DEBUG:
+            return False
+        else:
+            return True
 
     def has_delete_permission(self, request, obj=None):
-        return False
+        if not DEBUG:
+            return False
+        else:
+            return True
 
     def has_change_permission(self, request, obj=None):
         return False
