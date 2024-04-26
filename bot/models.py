@@ -183,9 +183,9 @@ class ReferralSettings(models.Model):
 
 class IncomeInfo(models.Model):
     total_amount = models.DecimalField(blank=True, null=True, decimal_places=2, max_digits=10,
-                                       verbose_name='Общий баланс проекта')
+                                       verbose_name='Общий баланс проекта. ‼ При выводе средств, вычесть отсюда сумму вручную')
     user_balance_total = models.DecimalField(blank=True, null=True, decimal_places=2, max_digits=10,
-                                             verbose_name='Доход пользователей от реферальной программы')
+                                             verbose_name='Доход пользователей от реферальной программы ‼ Средства вычитаются автоматически при подтверждения статуса транзакции по выводу средств')
 
     def __str__(self):
         return f'[Общий доход проекта: * {str(self.total_amount)} (RUB) *] [Доход пользователей от реферальной программы: * {str(self.user_balance_total)} (RUB) *]'

@@ -10,7 +10,7 @@ from datetime import datetime, timedelta, date
 
 from django.conf import settings
 from telebot.async_telebot import AsyncTeleBot
-from telebot.types import LabeledPrice
+from telebot.types import LabeledPrice, InlineKeyboardButton, InlineKeyboardMarkup
 
 import django_orm
 from bot.models import TelegramBot
@@ -302,6 +302,9 @@ async def callback_query_handlers(call):
                     await bot.send_message(call.message.chat.id, text=msg.usdt_message,
                                            reply_markup=markup.proceed_to_profile())
                 elif 'details' in data:
+                    keyboard = InlineKeyboardMarkup()
+                    keyboard.add(InlineKeyboardButton("Оплатить", pay=True))
+                    keyboard.add(InlineKeyboardButton(text=f'🔙 Назад', callback_data=f'back'))
                     price = LabeledPrice(label='Пополнение баланса', amount=int(data[-2]) * 100)
                     await bot.send_invoice(
                         chat_id=call.message.chat.id,
@@ -309,6 +312,7 @@ async def callback_query_handlers(call):
                         description='Пополнение баланса для генерации ключей Outline VPN',
                         invoice_payload=f'{str(user.user_id)}:{data[-2]}',
                         provider_token=f'{payment_token}',
+                        # provider_token=f'381764678:TEST:82447',
                         currency='RUB',
                         prices=[price],
                         photo_url='https://bitlaunch.io/blog/content/images/size/w2000/2022/10/Outline-VPN.png',
@@ -319,13 +323,16 @@ async def callback_query_handlers(call):
                         # start_parameter=f'{str(hash(str(user.user_id*data[-2])))}',
                         start_parameter=f'some-string-may-be',
                         need_phone_number=True,
+                        reply_markup=keyboard,
                     )
 
             elif 'sub' in data:
-                '''1 мес - 349 ₽
-                    3 мес - 949 ₽
-                    6 мес - 1 749 ₽
-                    12 мес - 3 149 ₽'''
+                '''
+                1 мес - 349 ₽
+                3 мес - 949 ₽
+                6 мес - 1 749 ₽
+                12 мес - 3 149 ₽
+                '''
                 user_balance = user.balance
                 price = None
                 days = None
@@ -341,9 +348,6 @@ async def callback_query_handlers(call):
                 elif data[-1] == '4':
                     price = 3149
                     days = 366
-                # elif data[-1] == '5':
-                #     price = 2000
-                #     days = 9999
                 if user_balance < price:
                     await bot.send_message(call.message.chat.id, text=msg.low_balance,
                                            reply_markup=markup.top_up_balance())
@@ -434,8 +438,9 @@ async def callback_query_handlers(call):
 
 
 if __name__ == '__main__':
+    bot.skip_updates()
     loop = asyncio.get_event_loop()
-    loop.create_task(bot.polling(non_stop=True))  # TELEGRAM BOT
+    loop.create_task(bot.polling(non_stop=True, request_timeout=100, timeout=100, skip_pending=True))  # TELEGRAM BOT
     # loop.create_task(bot.run_webhooks(
     #     listen=DOMAIN,
     #     certificate=WEBHOOK_SSL_CERT,
