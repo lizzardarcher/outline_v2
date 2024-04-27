@@ -226,6 +226,7 @@ async def callback_query_handlers(call):
     update_sub_status(user=user)
     country_list = [x.name for x in Country.objects.all()]
     payment_token = GlobalSettings.objects.get(pk=1).payment_system_api_key
+
     async def send_dummy():
         await bot.send_message(call.message.chat.id, text=msg.dummy_message, reply_markup=markup.start())
 
@@ -309,20 +310,19 @@ async def callback_query_handlers(call):
                     await bot.send_invoice(
                         chat_id=call.message.chat.id,
                         title='Outline VPN Key',
-                        description='Пополнение баланса для генерации ключей Outline VPN',
+                        description='Пополнение баланса для генерации ключей Outline',
                         invoice_payload=f'{str(user.user_id)}:{data[-2]}',
                         provider_token=f'{payment_token}',
-                        # provider_token=f'381764678:TEST:82447',
                         currency='RUB',
                         prices=[price],
                         photo_url='https://bitlaunch.io/blog/content/images/size/w2000/2022/10/Outline-VPN.png',
                         photo_height=512,  # !=0/None or picture won't be shown
                         photo_width=512,
                         photo_size=512,
+                        provider_data='',
                         is_flexible=False,
-                        # start_parameter=f'{str(hash(str(user.user_id*data[-2])))}',
-                        start_parameter=f'some-string-may-be',
                         need_phone_number=True,
+                        send_phone_number_to_provider=True,
                         reply_markup=keyboard,
                     )
 
@@ -401,27 +401,33 @@ async def callback_query_handlers(call):
                                    reply_markup=markup.withdraw_funds(call.message.chat.id))
 
         elif 'withdraw' in data:
-            timestamp = WithdrawalRequest.objects.filter(user=user).last().timestamp
 
-            if timestamp.date() == date.today():
-                await bot.send_message(call.message.chat.id,
-                                       text=msg.withdraw_request_duplicate.format(str(user.income)),
-                                       reply_markup=markup.proceed_to_profile())
-            elif user.income >= 500:
-                WithdrawalRequest.objects.create(
-                    user=user,
-                    amount=user.income,
-                    currency='RUB',
-                    timestamp=datetime.now(),
-                )
-                await bot.send_message(call.message.chat.id, text=msg.withdraw_request.format(str(user.income)),
-                                       reply_markup=markup.proceed_to_profile())
-                logger.info(
-                    f'[{call.message.chat.first_name} : {call.message.chat.username} : {call.message.chat.id}] [withdrawal request: {user} {user.income}]')
-            else:
-                await bot.send_message(call.message.chat.id,
-                                       text=msg.withdraw_request_not_enough.format(str(user.income)),
-                                       reply_markup=markup.proceed_to_profile())
+            try:
+                #  Проверка на количество запросов (можно 1 в сутки)
+                timestamp = WithdrawalRequest.objects.filter(user=user).last().timestamp
+                if timestamp.date() == date.today():
+                    await bot.send_message(
+                        chat_id=call.message.chat.id,
+                        text=msg.withdraw_request_duplicate.format(str(user.income)),
+                        reply_markup=markup.proceed_to_profile()
+                    )
+            except:
+                if user.income >= 500:
+                    #  Создание объекта запроса
+                    WithdrawalRequest.objects.create(
+                        user=user,
+                        amount=user.income,
+                        currency='RUB',
+                        timestamp=datetime.now(),
+                    )
+                    await bot.send_message(call.message.chat.id, text=msg.withdraw_request.format(str(user.income)),
+                                           reply_markup=markup.proceed_to_profile())
+                    logger.info(
+                        f'[{call.message.chat.first_name} : {call.message.chat.username} : {call.message.chat.id}] [withdrawal request: {user} {user.income}]')
+                else:
+                    await bot.send_message(call.message.chat.id,
+                                           text=msg.withdraw_request_not_enough.format(str(user.income)),
+                                           reply_markup=markup.proceed_to_profile())
 
         elif 'help' in data:
             await bot.send_message(call.message.chat.id, text=msg.help_message, reply_markup=markup.start(),
