@@ -61,7 +61,8 @@ async def create_new_key(server: Server, user: TelegramUser) -> str:
             password=key.password,
             port=key.port,
             method=key.method,
-            access_url=key.access_url,
+            # access_url=f'{key.access_url}',
+            access_url=f'{key.access_url}#VPN TON',
             used_bytes=key.used_bytes,
             data_limit=key.data_limit
         )
