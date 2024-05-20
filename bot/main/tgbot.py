@@ -72,7 +72,9 @@ async def update_user_subscription_status():
             exp_date = user.subscription_expiration
             if exp_date < datetime.now().date():
                 TelegramUser.objects.filter(user_id=user.user_id).update(subscription_status=False)
-                await bot.send_message(chat_id=user.user_id, text=msg.subscription_expired)
+                try:
+                    await bot.send_message(chat_id=user.user_id, text=msg.subscription_expired)
+                except: pass
                 await delete_user_keys(user=user)
         await asyncio.sleep(360)
     except Exception as e:
@@ -513,6 +515,7 @@ if __name__ == '__main__':
     bot.skip_updates()
     bot.add_custom_filter(asyncio_filters.StateFilter(bot))
     loop = asyncio.get_event_loop()
+    loop.create_task(update_user_subscription_status())  # SUBSCRIPTION REDEEM ON EXPIRATION
     loop.create_task(bot.polling(non_stop=True, request_timeout=100, timeout=100, skip_pending=True))  # TELEGRAM BOT
     # loop.create_task(bot.run_webhooks(
     #     listen=DOMAIN,
@@ -521,5 +524,4 @@ if __name__ == '__main__':
     #     webhook_url=DOMAIN,
     #     port=443
     # ))  # TELEGRAM BOT WITH WEBHOOKS
-    loop.create_task(update_user_subscription_status())  # SUBSCRIPTION REDEEM ON EXPIRATION
     loop.run_forever()
