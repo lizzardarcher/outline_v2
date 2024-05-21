@@ -32,11 +32,16 @@ def start():
 
 def download_app():
     markup = InlineKeyboardMarkup()
-    markup.add(InlineKeyboardButton(text=f'📱 iPhone/iPad', url=f'https://itunes.apple.com/app/outline-app/id1356177741'))
-    markup.add(InlineKeyboardButton(text=f'📱 Android', url=f'https://play.google.com/store/apps/details?id=org.outline.android.client'))
-    markup.add(InlineKeyboardButton(text=f'💻 Windows', url=f'https://s3.amazonaws.com/outline-releases/client/windows/stable/Outline-Client.exe'))
-    markup.add(InlineKeyboardButton(text=f'💻 MacOS', url=f'https://apps.apple.com/ru/app/outline-secure-internet-access/id1356178125'))
-    markup.add(InlineKeyboardButton(text=f'💻 Linux', url=f'https://s3.amazonaws.com/outline-releases/client/linux/stable/Outline-Client.AppImage'))
+    markup.add(
+        InlineKeyboardButton(text=f'📱 iPhone/iPad', url=f'https://itunes.apple.com/app/outline-app/id1356177741'))
+    markup.add(InlineKeyboardButton(text=f'📱 Android',
+                                    url=f'https://play.google.com/store/apps/details?id=org.outline.android.client'))
+    markup.add(InlineKeyboardButton(text=f'💻 Windows',
+                                    url=f'https://s3.amazonaws.com/outline-releases/client/windows/stable/Outline-Client.exe'))
+    markup.add(InlineKeyboardButton(text=f'💻 MacOS',
+                                    url=f'https://apps.apple.com/ru/app/outline-secure-internet-access/id1356178125'))
+    markup.add(InlineKeyboardButton(text=f'💻 Linux',
+                                    url=f'https://s3.amazonaws.com/outline-releases/client/linux/stable/Outline-Client.AppImage'))
     markup.add(InlineKeyboardButton(text=f'Приложение установлено 👌', callback_data=f'app_installed'))
     markup.add(btn_back)
     return markup
@@ -44,11 +49,14 @@ def download_app():
 
 def help_markup():
     markup = InlineKeyboardMarkup()
-    markup.add(InlineKeyboardButton(text='Ссылки на скачивание', url='https://telegra.ph/VPN-TON--Ssylki-na-skachivanie-04-09'))
-    markup.add(InlineKeyboardButton(text='Условия использования', url='https://telegra.ph/Usloviya-polzovaniya-servisom-VPN-TON-04-10'))
+    markup.add(InlineKeyboardButton(text='Ссылки на скачивание',
+                                    url='https://telegra.ph/VPN-TON--Ssylki-na-skachivanie-04-09'))
+    markup.add(InlineKeyboardButton(text='Условия использования',
+                                    url='https://telegra.ph/Usloviya-polzovaniya-servisom-VPN-TON-04-10'))
     markup.add(InlineKeyboardButton(text='Инструкция', url='https://telegra.ph/Instrukciya-VPN-TON-04-10'))
     markup.add(btn_back)
     return markup
+
 
 def back():
     markup = InlineKeyboardMarkup()
@@ -59,6 +67,9 @@ def back():
 def get_avail_location():
     markup = InlineKeyboardMarkup()
     markup.add(InlineKeyboardButton(text=f'Нидерланды 🇳🇱', callback_data=f'country:netherland'))
+    markup.add(InlineKeyboardButton(text=f'США 🇺🇸', callback_data=f'country:usa'))
+    markup.add(InlineKeyboardButton(text=f'Германия 🇩🇪', callback_data=f'country:germany'))
+    markup.add(InlineKeyboardButton(text=f'Финляндия 🇫🇮', callback_data=f'country:finland'))
     # markup.add(InlineKeyboardButton(text=f'Польша 🇵🇱', callback_data=f'country:poland'))
     # markup.add(InlineKeyboardButton(text=f'Казахстан 🇰🇿', callback_data=f'country:kazakhstan'))
     markup.add(InlineKeyboardButton(text=f'Россия 🇷🇺', callback_data=f'country:russia'))
@@ -87,7 +98,8 @@ def top_up_balance():
 
 def confirm_subscription(price: int, days: int):
     markup = InlineKeyboardMarkup()
-    btn1 = InlineKeyboardButton(text=f'✅ Подтвердить приобретение подписки', callback_data=f'account:confirm_subscription:{str(price)}:{str(days)}')
+    btn1 = InlineKeyboardButton(text=f'✅ Подтвердить приобретение подписки',
+                                callback_data=f'account:confirm_subscription:{str(price)}:{str(days)}')
     markup.row(btn1)
     markup.row(btn_back)
     return markup

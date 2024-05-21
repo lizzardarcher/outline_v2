@@ -139,9 +139,10 @@ class Country(models.Model):
     name = models.CharField(max_length=100, blank=True, null=True, verbose_name='Название страны')
     preset_id = models.IntegerField(null=True, blank=True, verbose_name='preset_id')
     is_active = models.BooleanField(default=True, null=True, blank=True, verbose_name='Активно')
+    name_for_app = models.CharField(max_length=100, null=True, blank=True, default='', verbose_name='Name for app')
 
     def __str__(self):
-        return f"{self.name}"
+        return f"{self.name_for_app}"
 
     class Meta:
         verbose_name = 'Страна'

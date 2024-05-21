@@ -27,6 +27,7 @@ class WithdrawalRequestInline(admin.TabularInline):
             return False
         else:
             return True
+
     def has_change_permission(self, request, obj=None):
         return False
 
@@ -65,6 +66,20 @@ class VpnKeyInline(admin.TabularInline):
             return False
         else:
             return True
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+
+class ServerInline(admin.TabularInline):
+    model = Server
+    extra = 1
+
+    def has_add_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
 
     def has_change_permission(self, request, obj=None):
         return False
@@ -238,9 +253,9 @@ class ServerAdmin(admin.ModelAdmin):
 
 @admin.register(Country)
 class CountryAdmin(admin.ModelAdmin):
-    list_display = ('preset_id', 'name')
-    list_display_links = ('preset_id', 'name')
-
+    list_display = ('name_for_app', 'is_active', 'name')
+    list_display_links = ('name_for_app', 'name')
+    inlines = [ServerInline]
 # @admin.register(Logging)
 # class LoggingAdmin(admin.ModelAdmin):
 #

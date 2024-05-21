@@ -76,7 +76,7 @@ async def create_new_key(server: Server, user: TelegramUser) -> str:
             if DEBUG: print(g, 'g')
         except:
             print(traceback.format_exc())
-        return key.access_url
+        return f'{key.access_url}#{server.country.name_for_app} VPN TON'
     except:
         print(traceback.format_exc())
 
