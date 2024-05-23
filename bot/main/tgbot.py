@@ -66,20 +66,21 @@ def update_sub_status(user: TelegramUser):
 
 
 async def update_user_subscription_status():
-    try:
-        list_users = [x for x in TelegramUser.objects.all()]
-        for user in list_users:
-            exp_date = user.subscription_expiration
-            if exp_date < datetime.now().date():
-                if user.subscription_status:
-                    TelegramUser.objects.filter(user_id=user.user_id).update(subscription_status=False)
-                    try:
-                        await bot.send_message(chat_id=user.user_id, text=msg.subscription_expired)
-                    except: pass
-                    await delete_user_keys(user=user)
-        await asyncio.sleep(360)
-    except Exception as e:
-        logger.error(traceback.format_exc())
+    while True:
+        try:
+            list_users = [x for x in TelegramUser.objects.all()]
+            for user in list_users:
+                exp_date = user.subscription_expiration
+                if exp_date < datetime.now().date():
+                    if user.subscription_status:
+                        TelegramUser.objects.filter(user_id=user.user_id).update(subscription_status=False)
+                        try:
+                            await bot.send_message(chat_id=user.user_id, text=msg.subscription_expired)
+                        except: pass
+                        await delete_user_keys(user=user)
+        except Exception as e:
+            logger.error(traceback.format_exc())
+        await asyncio.sleep(60*60*23)
 
 
 @bot.message_handler(commands=['test'])
