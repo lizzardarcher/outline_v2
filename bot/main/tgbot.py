@@ -434,6 +434,11 @@ async def callback_query_handlers(call):
                 TelegramUser.objects.filter(user_id=user.user_id).update(
                     balance=balance_after, subscription_status=True,
                     subscription_expiration=new_exp_date)
+                try:
+                    user_balance_total = IncomeInfo.objects.get(pk=1).user_balance_total - int(data[-2])
+                    IncomeInfo.objects.filter(id=1).update(user_balance_total=user_balance_total)
+                except:
+                    pass
                 await bot.send_message(call.message.chat.id, text=msg.sub_successful.format(new_exp_date, data[-2]),
                                        reply_markup=markup.proceed_to_profile())
 
