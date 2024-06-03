@@ -37,7 +37,7 @@ def download_app():
     markup.add(InlineKeyboardButton(text=f'📱 Android',
                                     url=f'https://play.google.com/store/apps/details?id=org.outline.android.client'))
     markup.add(InlineKeyboardButton(text=f'💻 Windows',
-                                    url=f'https://s3.amazonaws.com/outline-releases/client/windows/stable/Outline-Client.exe'))
+                                    url=f'https://github.com/Jigsaw-Code/outline-apps/releases/download/v1.10.1/Outline-Client.exe'))
     markup.add(InlineKeyboardButton(text=f'💻 MacOS',
                                     url=f'https://apps.apple.com/ru/app/outline-secure-internet-access/id1356178125'))
     markup.add(InlineKeyboardButton(text=f'💻 Linux',
