@@ -21,7 +21,8 @@ from bot.main.outline_client import create_new_key
 
 bot = AsyncTeleBot(token=TelegramBot.objects.get(pk=1).token, parse_mode='HTML')
 
-target_users = [x for x in TelegramUser.objects.filter(subscription_status=False)]
+target_users = [x for x in TelegramUser.objects.filter(subscription_status=False, join_date__gte=datetime.now() - timedelta(days=7))]
+# target_users = [x for x in TelegramUser.objects.filter(subscription_status=False)]
 # target_users = [x for x in TelegramUser.objects.filter(user_id=6384819902)]
 
 text = """
@@ -64,4 +65,6 @@ async def main():
 
 
 if __name__ == '__main__':
+    # for user in target_users:
+    #     print(user.user_id, user.username, )
     asyncio.run(main())
