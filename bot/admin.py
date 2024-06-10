@@ -1,5 +1,5 @@
 from django.contrib import admin
-from django.contrib.auth.models import Group
+from django.contrib.auth.models import Group, User
 from django.utils.html import format_html
 from django.conf import settings
 
@@ -7,10 +7,11 @@ from bot.models import *
 
 DEBUG = settings.DEBUG
 admin.site.site_url = ''
-admin.site.site_header = "Outline VPN Админ Панель"
-admin.site.site_title = "Outline VPN"
-admin.site.index_title = "Добро пожаловать в Outline VPN Админ Панель"
+admin.site.site_header = "VPN TON Админ Панель"
+admin.site.site_title = "VPN TON"
+admin.site.index_title = "Добро пожаловать в VPN TON Админ Панель"
 admin.site.unregister(Group)
+admin.site.unregister(User)
 
 
 class WithdrawalRequestInline(admin.TabularInline):
@@ -216,6 +217,7 @@ class IncomeInfo(admin.ModelAdmin):
             del actions['delete_selected']
         return actions
 
+    readonly_fields = ('total_amount', 'user_balance_total')
     inlines = [TransactionInline]
 
 
@@ -234,21 +236,6 @@ class ServerAdmin(admin.ModelAdmin):
         'hosting', 'ip_address', 'user', 'password', 'rental_price', 'max_keys', 'keys_generated', 'is_active',
         'created_at')
     inlines = [VpnKeyInline]
-
-
-# @admin.register(Price)
-# class PriceAdmin(admin.ModelAdmin):
-#     def has_add_permission(self, request):
-#         if Price.objects.all():
-#             return False
-#         else:
-#             return True
-#
-#     def get_actions(self, request):
-#         actions = super().get_actions(request)
-#         if 'delete_selected' in actions:
-#             del actions['delete_selected']
-#         return actions
 
 
 @admin.register(Country)
@@ -279,4 +266,20 @@ class LoggingAdmin(admin.ModelAdmin):
 
     list_display = ('get_log_level', 'datetime', 'user', 'message')
     list_display_links = ('message',)
+    ordering = ['-datetime']
 
+
+@admin.register(User)
+class UserAdmin(admin.ModelAdmin):
+
+    def has_add_permission(self, request, obj=None):
+        if not DEBUG:
+            return False
+        else:
+            return True
+
+    def has_delete_permission(self, request, obj=None):
+        if not DEBUG:
+            return False
+        else:
+            return True
