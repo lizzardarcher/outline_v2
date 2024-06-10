@@ -47,12 +47,9 @@ logging.basicConfig(
     ],
 )
 
-bot = AsyncTeleBot(token=TelegramBot.objects.get(pk=1).token, state_storage=StateMemoryStorage())
+bot = AsyncTeleBot(token='6376842977:AAFdrrnihqg7F9SagLbSeTMP0-7oSNyjXYc', state_storage=StateMemoryStorage())
 bot.parse_mode = 'HTML'
 DEBUG = settings.DEBUG
-WEBHOOK_SSL_CERT = '/var/www/html/outline_v2/bot/main/webhook_cert.pem'  # Path to the ssl certificate
-WEBHOOK_SSL_PRIV = '/var/www/html/outline_v2/bot/main/webhook_pkey.pem'  # Path to the ssl private key
-DOMAIN = '94.198.216.54'  # either domain, or ip address of vps
 
 
 def update_sub_status(user: TelegramUser):
@@ -84,12 +81,13 @@ async def update_user_subscription_status():
         await asyncio.sleep(60 * 60 * 23)
 
 
+@bot.message_handler(commands=['test'])
+async def start(message):
+    logger.info(f'{message.from_user.id} : {message.text}')
+
+
 @bot.message_handler(commands=['start'])
 async def start(message):
-    """
-    1. Создание нового пользователя
-    2. Создание реферальной связи до 5 ур.
-    """
     if message.chat.type == 'private':
         print(message.text)
         logger.info(
@@ -113,10 +111,16 @@ async def start(message):
             same_user_check = str(referred_by) == str(message.chat.id)
             if not same_user_check:
                 try:
+                    await bot.send_message(message.chat.id,
+                                           text=f"Вы были приглашены пользователем с ID: {referred_by}")
+
                     referrer = TelegramUser.objects.get(user_id=referred_by)  # тот, от кого получена ссылка
                     referred = TelegramUser.objects.get(user_id=message.chat.id)  # тот, кто воспользовался ссылкой
 
                     TelegramReferral.objects.create(referrer=referrer, referred=referred, level=1)
+
+                    # await bot.send_message(chat_id=message.chat.id,
+                    #                        text=msg.referral_bond.format(str(referrer.user_id), str(referred.user_id)))
 
                     #  Проверяем есть ли рефералы у того, кто отправил ссылку и получаем их список, если есть
                     referred_list = [x for x in TelegramReferral.objects.filter(referred=referrer, level__lte=4)]
@@ -126,12 +130,44 @@ async def start(message):
                         new_referral = TelegramReferral.objects.create(referrer=current_referrer, referred=referred,
                                                                        level=current_level + 1)
                         logger.info(f'Создана новая реферальная связь {new_referral}')
+                    # await bot.send_message(chat_id=message.chat.id,
+                    #                        text=msg.start_message.format(message.from_user.first_name))
+                    # await bot.send_message(chat_id=message.chat.id, text=msg.main_menu)
+                    # await bot.send_message(chat_id=message.chat.id, text=msg.main_menu_choice,
+                    #                        reply_markup=markup.start())
                 except:
                     logger.error(f'{traceback.format_exc()}')
 
+            # else:
+            #     await bot.send_message(chat_id=message.chat.id, text=msg.referral_bond_error)
+            #     await bot.send_message(chat_id=message.chat.id,
+            #                            text=msg.start_message.format(message.from_user.first_name))
+            #     await bot.send_message(chat_id=message.chat.id, text=msg.main_menu)
+            #     await bot.send_message(chat_id=message.chat.id, text=msg.main_menu_choice, reply_markup=markup.start())
+        # else:
+        #     user = TelegramUser.objects.get(user_id=message.chat.id)
+        #     if user.top_up_balance_listener:
+        #
+        #         try:
+        #             amount = int(message.text)
+        #             if amount >= 150:
+        #                 await bot.send_message(chat_id=message.chat.id, text=msg.start_payment.format(str(amount)),
+        #                                        reply_markup=markup.payment_ukassa(price=amount,
+        #                                                                           chat_id=message.chat.id))
+        #                 TelegramUser.objects.filter(user_id=message.chat.id).update(top_up_balance_listener=False)
+        #             else:
+        #                 await bot.send_message(chat_id=message.chat.id,
+        #                                        text=msg.start_payment_error.format(message.text),
+        #                                        reply_markup=markup.back())
+        #         except:
+        #             await bot.send_message(chat_id=message.chat.id, text=msg.start_payment_error.format(message.text),
+        #                                    reply_markup=markup.back())
+        #             logger.error(f'{traceback.format_exc()}')
 
-### РАСЫЛКА ############################################################################################################
-########################################################################################################################
+        # await bot.send_message(chat_id=message.chat.id, text=msg.main_menu_choice, reply_markup=markup.start())
+        # await bot.send_message(chat_id=message.chat.id, text=msg.main_menu_choice, reply_markup=markup.get_app_or_start())
+
+
 class MyStates(StatesGroup):
     msg_text = State()  # statesgroup should contain states
 
@@ -189,15 +225,10 @@ async def get_text(message):
                            text=f'Рассылка закончена. Сообщение:\n{text}\n отправлено {count} пользователям')
 
     await bot.delete_state(message.from_user.id, message.chat.id)
-### КОНЕЦ РАСЫЛКИ ######################################################################################################
-########################################################################################################################
 
 
 @bot.message_handler(content_types=['text'])
 async def handle_referral(message):
-    """
-    Обработка входящего значения при попытке пополнения баланса
-    """
     if message.chat.type == 'private':
         logger.info(
             f'[{message.from_user.first_name} : {message.from_user.username} : {message.from_user.id}] [msg: {message.text}]')
@@ -228,9 +259,6 @@ async def checkout(pre_checkout_query):
 
 @bot.message_handler(content_types=['successful_payment'])
 async def got_payment(message):
-    """
-    Обработка платежа
-    """
     payment = message.successful_payment
     logger.info(f'[{message.chat.first_name} : {message.chat.username} : {message.chat.id}] '
                 f'[successful payment: {str(int(payment.total_amount) / 100)} {payment.currency} | {payment}]')
@@ -298,9 +326,6 @@ async def callback_query_handlers(call):
 
         elif 'app_installed' in data:
             await bot.send_message(chat_id=call.message.chat.id, text=msg.app_installed, reply_markup=markup.start())
-            if user.subscription_status and not VpnKey.objects.filter(user=user):
-                key = await create_new_key(Server.objects.get(pk=2975076), user)
-                await bot.send_message(chat_id=user.user_id, text=msg.trial_key.format(key))
 
         elif 'manage' in data:
             await bot.send_message(call.message.chat.id, msg.avail_location_choice,
@@ -515,6 +540,6 @@ if __name__ == '__main__':
     bot.skip_updates()
     bot.add_custom_filter(asyncio_filters.StateFilter(bot))
     loop = asyncio.get_event_loop()
-    loop.create_task(update_user_subscription_status())  # SUBSCRIPTION REDEEM ON EXPIRATION
+    # loop.create_task(update_user_subscription_status())  # SUBSCRIPTION REDEEM ON EXPIRATION
     loop.create_task(bot.polling(non_stop=True, request_timeout=100, timeout=100, skip_pending=True))  # TELEGRAM BOT
     loop.run_forever()
