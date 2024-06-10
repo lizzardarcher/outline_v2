@@ -27,6 +27,7 @@ from bot.models import ReferralSettings
 from bot.models import WithdrawalRequest
 from bot.models import Transaction
 from bot.models import GlobalSettings
+from bot.models import Logging as lg
 
 from bot.main import msg
 from bot.main import markup
@@ -79,8 +80,13 @@ async def update_user_subscription_status():
                         except:
                             pass
                         await delete_user_keys(user=user)
+                        lg.objects.create(log_level='INFO', message='[Закончилась подписка у пользователя]',
+                                          datetime=datetime.now(), user=user)
         except Exception as e:
             logger.error(traceback.format_exc())
+            lg.objects.create(log_level='FATAL',
+                              message=f'[Ошибка при автообновлении статуса подписки:\n{traceback.format_exc()}]',
+                              datetime=datetime.now())
         await asyncio.sleep(60 * 60 * 23)
 
 
@@ -103,6 +109,8 @@ async def start(message):
                                         subscription_status=True,
                                         subscription_expiration=datetime.now() + timedelta(days=3))
             await bot.send_message(chat_id=message.chat.id, text=msg.new_user_bonus)
+            lg.objects.create(log_level='INFO', message='[Создан новый пользователь]', datetime=datetime.now(),
+                              user=TelegramUser.objects.get(user_id=message.from_user.id))
         except:
             ...
         await bot.send_message(chat_id=message.chat.id, text=msg.start_message.format(message.from_user.first_name),
@@ -126,8 +134,15 @@ async def start(message):
                         new_referral = TelegramReferral.objects.create(referrer=current_referrer, referred=referred,
                                                                        level=current_level + 1)
                         logger.info(f'Создана новая реферальная связь {new_referral}')
+                        lg.objects.create(log_level='INFO', message=f'[Создана новая реферальная связь {new_referral}]',
+                                          datetime=datetime.now(),
+                                          user=TelegramUser.objects.get(user_id=message.from_user.id))
+
                 except:
                     logger.error(f'{traceback.format_exc()}')
+                    lg.objects.create(log_level='FATAL', message=f'[ОШИБКА:\n{traceback.format_exc()}]',
+                                      datetime=datetime.now(),
+                                      user=TelegramUser.objects.get(user_id=message.from_user.id))
 
 
 ### РАСЫЛКА ############################################################################################################
@@ -189,6 +204,8 @@ async def get_text(message):
                            text=f'Рассылка закончена. Сообщение:\n{text}\n отправлено {count} пользователям')
 
     await bot.delete_state(message.from_user.id, message.chat.id)
+
+
 ### КОНЕЦ РАСЫЛКИ ######################################################################################################
 ########################################################################################################################
 
@@ -215,10 +232,16 @@ async def handle_referral(message):
                     await bot.send_message(chat_id=message.chat.id,
                                            text=msg.start_payment_error.format(message.text),
                                            reply_markup=markup.back())
+                lg.objects.create(log_level='INFO',
+                                  message=f'[Пользователь пытается пополнить баланс на {str(amount)}P.]',
+                                  datetime=datetime.now(), user=user)
             except:
                 await bot.send_message(chat_id=message.chat.id, text=msg.start_payment_error.format(message.text),
                                        reply_markup=markup.back())
                 logger.error(f'{traceback.format_exc()}')
+                lg.objects.create(log_level='FATAL',
+                                  message=f'[Ошибка при пополнении баланса:\n{traceback.format_exc()}]',
+                                  datetime=datetime.now(), user=user)
 
 
 @bot.pre_checkout_query_handler(func=lambda query: True)
@@ -237,6 +260,10 @@ async def got_payment(message):
 
     user = TelegramUser.objects.get(user_id=message.chat.id)
     amount = float(message.successful_payment.total_amount / 100)
+
+    lg.objects.create(log_level='INFO', message=f'[Пользователь успешно пополнил баланс на {str(amount)}P.]',
+                      datetime=datetime.now(), user=user)
+
     currency = message.successful_payment.currency
     await bot.send_message(chat_id=message.chat.id, text=msg.payment_successful.format(amount, currency))
     await bot.send_message(chat_id=message.chat.id, text=msg.main_menu_choice, reply_markup=markup.start())
@@ -279,10 +306,13 @@ async def callback_query_handlers(call):
     data = call.data.split(':')
     logger.info(
         f'[{call.message.chat.first_name}:{call.message.chat.username}:{call.message.chat.id}] [data: {call.data}]')
+
     user = TelegramUser.objects.get(user_id=call.message.chat.id)
     update_sub_status(user=user)
     country_list = [x.name for x in Country.objects.all()]
     payment_token = GlobalSettings.objects.get(pk=1).payment_system_api_key
+    lg.objects.create(log_level='INFO', message=f'[ДЕЙСТВИЕ: {call.data}]',
+                      datetime=datetime.now(), user=user)
 
     async def send_dummy():
         await bot.send_message(call.message.chat.id, text=msg.dummy_message, reply_markup=markup.start())
