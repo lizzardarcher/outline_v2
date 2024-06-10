@@ -272,6 +272,9 @@ class Logging(models.Model):
     user = models.ForeignKey(to='TelegramUser', null=True, blank=True, on_delete=models.SET_NULL,
                              verbose_name='Аккаунт')
 
+    def __str__(self):
+        return self.message
+
     class Meta:
         verbose_name = 'Лог'
         verbose_name_plural = 'Логи'
