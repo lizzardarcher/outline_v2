@@ -273,7 +273,7 @@ class Logging(models.Model):
                              verbose_name='Аккаунт')
 
     def __str__(self):
-        return self.message
+        return f'[{self.log_level}] {self.message} [{str(self.datetime)}] [{self.user}]'
 
     class Meta:
         verbose_name = 'Лог'
