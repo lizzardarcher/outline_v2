@@ -256,24 +256,27 @@ class CountryAdmin(admin.ModelAdmin):
     list_display = ('name_for_app', 'is_active', 'name')
     list_display_links = ('name_for_app', 'name')
     inlines = [ServerInline]
-# @admin.register(Logging)
-# class LoggingAdmin(admin.ModelAdmin):
-#
-#     def get_log_level(self, obj):
-#         if obj.log_level == 'INFO':
-#             return format_html('<div style="color:aqua;">%s</div>' % obj.log_level)
-#         elif obj.log_level == 'FATAL':
-#             return format_html('<div style="color:red;">%s</div>' % obj.log_level)
-#         elif obj.log_level == 'WARNING':
-#             return format_html('<div style="color:orange;">%s</div>' % obj.log_level)
-#         elif obj.log_level == 'TRACE':
-#             return format_html('<div style="color:white;">%s</div>' % obj.log_level)
-#         elif obj.log_level == 'DEBUG':
-#             return format_html('<div style="color:white;">%s</div>' % obj.log_level)
-#         return obj.log_level
-#
-#     get_log_level.allow_tags = True
-#     get_log_level.short_description = 'log_level'
-#
-#     list_display = ('get_log_level', 'datetime', 'user', 'message')
-#     list_display_links = ('message',)
+
+
+@admin.register(Logging)
+class LoggingAdmin(admin.ModelAdmin):
+
+    def get_log_level(self, obj):
+        if obj.log_level == 'INFO':
+            return format_html('<div style="color:aqua;">%s</div>' % obj.log_level)
+        elif obj.log_level == 'FATAL':
+            return format_html('<div style="color:red;">%s</div>' % obj.log_level)
+        elif obj.log_level == 'WARNING':
+            return format_html('<div style="color:orange;">%s</div>' % obj.log_level)
+        elif obj.log_level == 'TRACE':
+            return format_html('<div style="color:white;">%s</div>' % obj.log_level)
+        elif obj.log_level == 'DEBUG':
+            return format_html('<div style="color:white;">%s</div>' % obj.log_level)
+        return obj.log_level
+
+    get_log_level.allow_tags = True
+    get_log_level.short_description = 'log_level'
+
+    list_display = ('get_log_level', 'datetime', 'user', 'message')
+    list_display_links = ('message',)
+
