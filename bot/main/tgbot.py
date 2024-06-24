@@ -233,7 +233,7 @@ async def handle_referral(message):
                                            text=msg.start_payment_error.format(message.text),
                                            reply_markup=markup.back())
                 lg.objects.create(log_level='INFO',
-                                  message=f'[Пользователь попытался пополнить баланс на {str(amount)}P.]',
+                                  message=f'[Пользователь хочет пополнить баланс на {str(amount)}P.]',
                                   datetime=datetime.now(), user=user)
             except:
                 await bot.send_message(chat_id=message.chat.id, text=msg.start_payment_error.format(message.text),
