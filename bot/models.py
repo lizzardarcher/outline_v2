@@ -26,14 +26,14 @@ class TelegramUser(models.Model):
     def __str__(self):
         if self.last_name:
             if self.subscription_status:
-                return f"{self.first_name} {self.last_name} @{self.username} ✅"
+                return f"{self.first_name} {self.last_name}   @{self.username} ✅"
             else:
-                return f"{self.first_name} {self.last_name} @{self.username} ❌"
+                return f"{self.first_name} {self.last_name}   @{self.username} ❌"
         else:
             if self.subscription_status:
-                return f"{self.first_name} {self.username} ✅"
+                return f"{self.first_name}   @{self.username} ✅"
             else:
-                return f"{self.first_name} {self.username} ❌"
+                return f"{self.first_name}   @{self.username} ❌"
 
     class Meta:
         verbose_name = 'Пользователь ТГ'
