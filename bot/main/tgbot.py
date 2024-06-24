@@ -80,7 +80,7 @@ async def update_user_subscription_status():
                         except:
                             pass
                         await delete_user_keys(user=user)
-                        lg.objects.create(log_level='INFO', message='[Закончилась подписка у пользователя]',
+                        lg.objects.create(log_level='WARNING', message='[Закончилась подписка у пользователя]',
                                           datetime=datetime.now(), user=user)
         except Exception as e:
             logger.error(traceback.format_exc())
@@ -261,7 +261,7 @@ async def got_payment(message):
     user = TelegramUser.objects.get(user_id=message.chat.id)
     amount = float(message.successful_payment.total_amount / 100)
 
-    lg.objects.create(log_level='INFO', message=f'[Пользователь успешно пополнил баланс на {str(amount)}P.]',
+    lg.objects.create(log_level='SUCCESS', message=f'[Пользователь успешно пополнил баланс на {str(amount)}P.]',
                       datetime=datetime.now(), user=user)
 
     currency = message.successful_payment.currency
@@ -304,8 +304,7 @@ async def got_payment(message):
 @bot.callback_query_handler(func=lambda call: True)
 async def callback_query_handlers(call):
     data = call.data.split(':')
-    logger.info(
-        f'[{call.message.chat.first_name}:{call.message.chat.username}:{call.message.chat.id}] [data: {call.data}]')
+    logger.info(f'[{call.message.chat.first_name}:{call.message.chat.username}:{call.message.chat.id}] [data: {call.data}]')
 
     user = TelegramUser.objects.get(user_id=call.message.chat.id)
     update_sub_status(user=user)
@@ -317,6 +316,7 @@ async def callback_query_handlers(call):
     else:
         lg.objects.create(log_level='INFO', message=f'[ДЕЙСТВИЕ: {call.data}]',
                           datetime=datetime.now(), user=user)
+
     async def send_dummy():
         await bot.send_message(call.message.chat.id, text=msg.dummy_message, reply_markup=markup.start())
 
