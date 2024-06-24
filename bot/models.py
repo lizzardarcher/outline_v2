@@ -24,16 +24,23 @@ class TelegramUser(models.Model):
     withdrawal_listener = models.BooleanField(default=False, verbose_name='Withdrawal listener')
 
     def __str__(self):
-        if self.last_name:
-            if self.subscription_status:
-                return f"{self.first_name} {self.last_name} @{self.username} ✅"
-            else:
-                return f"{self.first_name} {self.last_name} @{self.username} ❌"
+        if not self.last_name:
+            last_name = ''
         else:
-            if self.subscription_status:
-                return f"{self.first_name} @{self.username} ✅"
-            else:
-                return f"{self.first_name} @{self.username} ❌"
+            last_name = self.last_name
+        if not self.first_name:
+            first_name = ''
+        else:
+            first_name = self.first_name
+        if not self.username:
+            username = ''
+        else:
+            username = '@' + self.username
+        if not self.subscription_status:
+            subscription_status = '❌'
+        else:
+            subscription_status = '✅'
+        return f"{first_name} {last_name} {username} {subscription_status}"
 
     class Meta:
         verbose_name = 'Пользователь ТГ'

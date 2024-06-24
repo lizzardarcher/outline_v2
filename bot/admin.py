@@ -264,7 +264,7 @@ class LoggingAdmin(admin.ModelAdmin):
     get_log_level.allow_tags = True
     get_log_level.short_description = 'log_level'
 
-    list_display = ('get_log_level', 'datetime', 'user', 'message')
+    list_display = ('datetime', 'user', 'message', 'get_log_level', )
     list_display_links = ('message',)
     ordering = ['-datetime']
 
