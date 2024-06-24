@@ -260,6 +260,36 @@ class CountryAdmin(admin.ModelAdmin):
     inlines = [ServerInline]
 
 
+@admin.action(description="Пометить как TRACE")
+def make_trace(modeladmin, request, queryset):
+    queryset.update(log_level="TRACE")
+
+
+@admin.action(description="Пометить как DEBUG")
+def make_debug(modeladmin, request, queryset):
+    queryset.update(log_level="DEBUG")
+
+
+@admin.action(description="Пометить как INFO")
+def make_info(modeladmin, request, queryset):
+    queryset.update(log_level="INFO")
+
+
+@admin.action(description="Пометить как FATAL")
+def make_fatal(modeladmin, request, queryset):
+    queryset.update(log_level="FATAL")
+
+
+@admin.action(description="Пометить как WARNING")
+def make_warning(modeladmin, request, queryset):
+    queryset.update(log_level="WARNING")
+
+
+@admin.action(description="Пометить как SUCCESS")
+def make_success(modeladmin, request, queryset):
+    queryset.update(log_level="SUCCESS")
+
+
 @admin.register(Logging)
 class LoggingAdmin(admin.ModelAdmin):
 
@@ -284,6 +314,7 @@ class LoggingAdmin(admin.ModelAdmin):
     list_display = ('datetime', 'user', 'message', 'get_log_level',)
     list_display_links = ('user', 'message',)
     ordering = ['-datetime']
+    actions = [make_warning, make_debug, make_fatal, make_trace, make_success, make_info]
 
 
 @admin.register(User)
