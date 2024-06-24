@@ -88,7 +88,8 @@ class ServerInline(admin.TabularInline):
 
 class LogInline(admin.TabularInline):
     model = Logging
-    extra = 1
+    fields = ('user', 'message')
+    ordering = ['-datetime']
 
     def has_add_permission(self, request, obj=None):
         return False
