@@ -31,9 +31,9 @@ class TelegramUser(models.Model):
                 return f"{self.first_name} {self.last_name} @{self.username} ❌"
         else:
             if self.subscription_status:
-                return f"{self.first_name} {self.last_name} ✅"
+                return f"{self.first_name} {self.username} ✅"
             else:
-                return f"{self.first_name} {self.last_name} ❌"
+                return f"{self.first_name} {self.username} ❌"
 
     class Meta:
         verbose_name = 'Пользователь ТГ'
