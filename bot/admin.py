@@ -86,6 +86,20 @@ class ServerInline(admin.TabularInline):
         return False
 
 
+class LogInline(admin.TabularInline):
+    model = Logging
+    extra = 1
+
+    def has_add_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+
 @admin.register(TelegramUser)
 class TelegramUserAdmin(admin.ModelAdmin):
     list_display = (
@@ -95,9 +109,9 @@ class TelegramUserAdmin(admin.ModelAdmin):
     search_fields = ('first_name', 'last_name', 'username', 'user_id')
     readonly_fields = ('join_date', 'first_name', 'last_name', 'username', 'user_id', 'income')
     exclude = ('data_limit', 'is_banned', 'top_up_balance_listener', 'withdrawal_listener')
-    ordering = ('-subscription_status', '-join_date', )
+    ordering = ('-subscription_status', '-join_date',)
     empty_value_display = '---'
-    inlines = [TransactionInline, VpnKeyInline, WithdrawalRequestInline]
+    inlines = [TransactionInline, VpnKeyInline, WithdrawalRequestInline, LogInline]
 
     def has_add_permission(self, request):
         if not DEBUG:
@@ -264,8 +278,8 @@ class LoggingAdmin(admin.ModelAdmin):
     get_log_level.allow_tags = True
     get_log_level.short_description = 'log_level'
 
-    list_display = ('datetime', 'user', 'message', 'get_log_level', )
-    list_display_links = ('message',)
+    list_display = ('datetime', 'user', 'message', 'get_log_level',)
+    list_display_links = ('user', 'message',)
     ordering = ['-datetime']
 
 
