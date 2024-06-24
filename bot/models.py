@@ -25,9 +25,15 @@ class TelegramUser(models.Model):
 
     def __str__(self):
         if self.last_name:
-            return f"{self.first_name} {self.last_name} ({self.username})"
+            if self.subscription_status:
+                return f"{self.first_name} {self.last_name} @{self.username} ✅"
+            else:
+                return f"{self.first_name} {self.last_name} @{self.username} ❌"
         else:
-            return f"{self.first_name} ({self.username})"
+            if self.subscription_status:
+                return f"{self.first_name} {self.last_name} ✅"
+            else:
+                return f"{self.first_name} {self.last_name} ❌"
 
     class Meta:
         verbose_name = 'Пользователь ТГ'
