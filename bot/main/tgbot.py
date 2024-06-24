@@ -311,9 +311,12 @@ async def callback_query_handlers(call):
     update_sub_status(user=user)
     country_list = [x.name for x in Country.objects.all()]
     payment_token = GlobalSettings.objects.get(pk=1).payment_system_api_key
-    lg.objects.create(log_level='INFO', message=f'[ДЕЙСТВИЕ: {call.data}]',
-                      datetime=datetime.now(), user=user)
-
+    if data == 'confirm_subscription':
+        lg.objects.create(log_level='SUCCESS', message=f'[ДЕЙСТВИЕ: {call.data}]',
+                          datetime=datetime.now(), user=user)
+    else:
+        lg.objects.create(log_level='INFO', message=f'[ДЕЙСТВИЕ: {call.data}]',
+                          datetime=datetime.now(), user=user)
     async def send_dummy():
         await bot.send_message(call.message.chat.id, text=msg.dummy_message, reply_markup=markup.start())
 

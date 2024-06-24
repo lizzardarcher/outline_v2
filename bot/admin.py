@@ -274,6 +274,8 @@ class LoggingAdmin(admin.ModelAdmin):
             return format_html('<div style="color:white;">%s</div>' % obj.log_level)
         elif obj.log_level == 'DEBUG':
             return format_html('<div style="color:white;">%s</div>' % obj.log_level)
+        elif obj.log_level == 'SUCCESS':
+            return format_html('<div style="color:green;">%s</div>' % obj.log_level)
         return obj.log_level
 
     get_log_level.allow_tags = True

@@ -270,11 +270,12 @@ class WithdrawalRequest(models.Model):
 
 
 LOG_LEVEL = (
-    ('Trace', 'TRACE'),
-    ('Debug', 'DEBUG'),
-    ('Info', 'INFO'),
-    ('Warning', 'WARNING'),
-    ('Fatal', 'FATAL'),
+    ('TRACE', 'TRACE'),
+    ('DEBUG', 'DEBUG'),
+    ('INFO', 'INFO'),
+    ('WARNING', 'WARNING'),
+    ('FATAL', 'FATAL'),
+    ('SUCCESS', 'SUCCESS'),
 )
 
 
