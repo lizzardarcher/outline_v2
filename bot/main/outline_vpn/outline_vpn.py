@@ -1,15 +1,28 @@
 """
 API wrapper for Outline VPN
 """
-
+import logging
+import sys
 import typing
 from dataclasses import dataclass
+from logging.handlers import TimedRotatingFileHandler
+from pathlib import Path
 
 import requests
 from urllib3 import PoolManager
 
 UNABLE_TO_GET_METRICS_ERROR = "Unable to get metrics"
 
+log_path = Path(__file__).parent.parent.absolute() / 'log/bot_log.log'
+logger = logging.getLogger(__name__)
+logging.basicConfig(
+    format='%(asctime)s %(levelname) -8s %(message)s',
+    level=logging.DEBUG,
+    datefmt='%Y.%m.%d %I:%M:%S',
+    handlers=[
+        TimedRotatingFileHandler(filename=log_path, when='D', interval=1, backupCount=5),
+    ],
+)
 
 @dataclass
 class OutlineKey:
@@ -156,6 +169,18 @@ class OutlineVPN:
             response = self.session.post(
                 f"{self.api_url}/access-keys", verify=False, json=payload
             )
+
+        ### Отладка ошибок сервера ###########
+
+        logger.warning(f'[key_id: {key_id}] [method: {method}] [password: {password}] [data_limit: {data_limit}] [port: {port}]')
+        logger.warning(f'[payload: {payload}]')
+        logger.warning(f'[{response.text}]')
+        logger.warning(f'[{response.url}]')
+        logger.warning(f'[{response.status_code}]')
+        logger.warning(f'[{response.content}]')
+        logger.warning(f'[{response.raw}]')
+
+        ######################################
 
         if response.status_code == 201:
             key = response.json()

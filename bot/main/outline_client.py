@@ -1,4 +1,5 @@
 import logging
+import random
 import sys
 import traceback
 from logging.handlers import TimedRotatingFileHandler
@@ -22,9 +23,9 @@ logging.basicConfig(
     datefmt='%Y.%m.%d %I:%M:%S',
     handlers=[
         TimedRotatingFileHandler(filename=log_path, when='D', interval=1, backupCount=5),
-        logging.StreamHandler(stream=sys.stderr)
     ],
 )
+
 
 async def update_keys_data_limit(user: TelegramUser):
     try:
@@ -64,9 +65,9 @@ async def create_new_key(server: Server, user: TelegramUser) -> str:
         data = dict(server.script_out)
         client = OutlineVPN(api_url=data['apiUrl'], cert_sha256=data['certSha256'])
         key = client.create_key(
-            key_id=f'{str(user.user_id)}:{str(server.id)}',
+            key_id=f'{str(user.user_id)}:{str(server.id)}'+f'{str(random.randint(1,100000))}',
             name=f'{str(user.user_id)}:{server.ip_address}',
-            data_limit=data_limit
+            # data_limit=data_limit
         )
         VpnKey.objects.create(
             server=server,
@@ -95,6 +96,7 @@ async def create_new_key(server: Server, user: TelegramUser) -> str:
     except:
         logger.error(traceback.format_exc())
         return 'None'
+
 
 async def delete_user_keys(user: TelegramUser) -> bool:
     """
