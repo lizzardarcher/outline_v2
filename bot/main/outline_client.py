@@ -1,4 +1,8 @@
+import logging
+import sys
 import traceback
+from logging.handlers import TimedRotatingFileHandler
+from pathlib import Path
 
 from django.conf import settings
 
@@ -10,6 +14,17 @@ from bot.models import TelegramUser
 
 DEBUG = settings.DEBUG
 
+log_path = Path(__file__).parent.absolute() / 'log/bot_log.log'
+logger = logging.getLogger(__name__)
+logging.basicConfig(
+    format='%(asctime)s %(levelname) -8s %(message)s',
+    level=logging.DEBUG,
+    datefmt='%Y.%m.%d %I:%M:%S',
+    handlers=[
+        TimedRotatingFileHandler(filename=log_path, when='D', interval=1, backupCount=5),
+        logging.StreamHandler(stream=sys.stderr)
+    ],
+)
 
 async def update_keys_data_limit(user: TelegramUser):
     try:
@@ -75,11 +90,11 @@ async def create_new_key(server: Server, user: TelegramUser) -> str:
             g = Server.objects.filter(id=server.id).update(keys_generated=keys_generated)
             if DEBUG: print(g, 'g')
         except:
-            print(traceback.format_exc())
+            logger.error(traceback.format_exc())
         return f'{key.access_url}#{server.country.name_for_app} VPN TON'
     except:
-        print(traceback.format_exc())
-
+        logger.error(traceback.format_exc())
+        return 'None'
 
 async def delete_user_keys(user: TelegramUser) -> bool:
     """
@@ -112,18 +127,18 @@ async def delete_user_keys(user: TelegramUser) -> bool:
                         if DEBUG: print(keys_generated, 'keys_generated')
                         Server.objects.filter(script_out=data).update(keys_generated=keys_generated)
                     except:
-                        print(traceback.format_exc())
+                        logger.error(traceback.format_exc())
 
                 except:
                     ...
         VpnKey.objects.filter(user=user).delete()
         return True
     except Exception as e:
-        print(traceback.format_exc())
+        logger.error(traceback.format_exc())
         return False
 
 # Create a new key
-# new_key = client.create_key()
+# new_key = create_new_key()
 # print(new_key)
 # Rename it
 # client.rename_key(new_key.key_id, "new_key")

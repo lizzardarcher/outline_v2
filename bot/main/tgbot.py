@@ -44,7 +44,7 @@ logging.basicConfig(
     datefmt='%Y.%m.%d %I:%M:%S',
     handlers=[
         TimedRotatingFileHandler(filename=log_path, when='D', interval=1, backupCount=5),
-        logging.StreamHandler(stream=sys.stderr)
+        # logging.StreamHandler(stream=sys.stderr)
     ],
 )
 
@@ -332,7 +332,7 @@ async def callback_query_handlers(call):
         elif 'app_installed' in data:
             await bot.send_message(chat_id=call.message.chat.id, text=msg.app_installed, reply_markup=markup.start())
             if user.subscription_status and not VpnKey.objects.filter(user=user):
-                key = await create_new_key(Server.objects.get(pk=2975076), user)
+                key = await create_new_key(Server.objects.get(pk=2975077), user)
                 await bot.send_message(chat_id=user.user_id, text=msg.trial_key.format(key))
 
         elif 'manage' in data:
@@ -366,8 +366,12 @@ async def callback_query_handlers(call):
                     country = call.data.split('_')[-1]
                     key = await create_new_key(
                         server=Server.objects.filter(country__name=country, keys_generated__lte=100).last(), user=user)
-                    await bot.send_message(call.message.chat.id, text=f'{msg.key_avail}\n<code>{key}</code>',
-                                           reply_markup=markup.key_menu(country))
+                    if key == 'None':
+                        await bot.send_message(call.message.chat.id, text=f'{msg.try_another_server}',
+                                               reply_markup=markup.start())
+                    else:
+                        await bot.send_message(call.message.chat.id, text=f'{msg.key_avail}\n<code>{key}</code>',
+                                               reply_markup=markup.key_menu(country))
                 except:
                     logger.error(f'{traceback.format_exc()}')
 
