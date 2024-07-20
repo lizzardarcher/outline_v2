@@ -304,7 +304,8 @@ async def got_payment(message):
 @bot.callback_query_handler(func=lambda call: True)
 async def callback_query_handlers(call):
     data = call.data.split(':')
-    logger.info(f'[{call.message.chat.first_name}:{call.message.chat.username}:{call.message.chat.id}] [data: {call.data}]')
+    logger.info(
+        f'[{call.message.chat.first_name}:{call.message.chat.username}:{call.message.chat.id}] [data: {call.data}]')
 
     user = TelegramUser.objects.get(user_id=call.message.chat.id)
     update_sub_status(user=user)
@@ -428,26 +429,28 @@ async def callback_query_handlers(call):
 
             elif 'sub' in data:
                 '''
-                1 мес - 349 ₽
-                3 мес - 949 ₽
-                6 мес - 1 749 ₽
-                12 мес - 3 149 ₽
+                1 мес - 179 ₽
+                3 мес - 479 ₽
+                6 мес - 779 ₽
+                12 мес - 1 599 ₽
                 '''
                 user_balance = user.balance
                 price = None
                 days = None
+
                 if data[-1] == '1':
-                    price = 349
+                    price = 179
                     days = 31
                 elif data[-1] == '2':
-                    price = 949
+                    price = 479
                     days = 93
                 elif data[-1] == '3':
-                    price = 1749
+                    price = 879
                     days = 186
                 elif data[-1] == '4':
-                    price = 3149
+                    price = 1599
                     days = 366
+
                 if user_balance < price:
                     await bot.send_message(call.message.chat.id, text=msg.low_balance,
                                            reply_markup=markup.top_up_balance())
