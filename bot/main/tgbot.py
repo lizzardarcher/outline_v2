@@ -429,26 +429,26 @@ async def callback_query_handlers(call):
 
             elif 'sub' in data:
                 '''
-                1 мес - 179 ₽
-                3 мес - 479 ₽
-                6 мес - 779 ₽
-                12 мес - 1 599 ₽
+                1 мес - 359 ₽ 229 ₽
+                3 мес - 890 ₽ 649 ₽
+                6 мес - 1749 ₽ 1290 ₽
+                12 мес - 3190 ₽ 2290 ₽
                 '''
                 user_balance = user.balance
                 price = None
                 days = None
 
                 if data[-1] == '1':
-                    price = 179
+                    price = 229
                     days = 31
                 elif data[-1] == '2':
-                    price = 479
+                    price = 649
                     days = 93
                 elif data[-1] == '3':
-                    price = 879
+                    price = 1290
                     days = 186
                 elif data[-1] == '4':
-                    price = 1599
+                    price = 2290
                     days = 366
 
                 if user_balance < price:
