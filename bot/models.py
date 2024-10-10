@@ -292,3 +292,17 @@ class Logging(models.Model):
     class Meta:
         verbose_name = 'Лог'
         verbose_name_plural = 'Логи'
+
+
+class Prices(models.Model):
+    price_1 = models.PositiveIntegerField(null=True, blank=True, verbose_name='price for 1 month')
+    price_2 = models.PositiveIntegerField(null=True, blank=True, verbose_name='price for 3 month')
+    price_3 = models.PositiveIntegerField(null=True, blank=True, verbose_name='price for 6 month')
+    price_4 = models.PositiveIntegerField(null=True, blank=True, verbose_name='price for 12 month')
+
+    def __str__(self):
+        return f'{self.price_1} / {self.price_2} / {self.price_3} / {self.price_4}'
+
+    class Meta:
+        verbose_name = 'Цена'
+        verbose_name_plural = 'Цены'

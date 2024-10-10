@@ -16,7 +16,7 @@ from telebot.asyncio_handler_backends import State, StatesGroup
 from telebot.types import LabeledPrice, InlineKeyboardButton, InlineKeyboardMarkup
 
 import django_orm
-from bot.models import TelegramBot
+from bot.models import TelegramBot, Prices
 from bot.models import TelegramUser
 from bot.models import TelegramReferral
 from bot.models import VpnKey
@@ -437,18 +437,19 @@ async def callback_query_handlers(call):
                 user_balance = user.balance
                 price = None
                 days = None
+                prices = Prices.objects.get(pk=1)
 
                 if data[-1] == '1':
-                    price = 229
+                    price = prices.price_1
                     days = 31
                 elif data[-1] == '2':
-                    price = 649
+                    price = prices.price_2
                     days = 93
                 elif data[-1] == '3':
-                    price = 1290
+                    price = prices.price_3
                     days = 186
                 elif data[-1] == '4':
-                    price = 2290
+                    price = prices.price_4
                     days = 366
 
                 if user_balance < price:

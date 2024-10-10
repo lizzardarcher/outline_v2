@@ -1,3 +1,5 @@
+import os
+
 from django.contrib import admin
 from django.contrib.auth.models import Group, User
 from django.utils.html import format_html
@@ -331,3 +333,20 @@ class UserAdmin(admin.ModelAdmin):
             return False
         else:
             return True
+
+
+@admin.register(Prices)
+class PricesAdmin(admin.ModelAdmin):
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    def has_add_permission(self, request, obj=None):
+        return False
+
+    def save_model(self, request, obj, form, change):
+        """
+        Given a model instance save it to the database.
+        """
+        os.system('systemctl restart vpn_bot.service')
+        obj.save()

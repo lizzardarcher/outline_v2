@@ -2,6 +2,8 @@ from telebot.types import InlineKeyboardMarkup
 from telebot.types import InlineKeyboardButton
 from telebot.types import LabeledPrice
 from telebot.types import ShippingOption
+import django_orm
+from bot.models import Prices
 
 # from bot.models import *
 
@@ -134,10 +136,11 @@ def paymemt_menu():
 
 def choose_subscription():
     markup = InlineKeyboardMarkup()
-    markup.add(InlineKeyboardButton(text=f'🟢 1 месяц (229 р)', callback_data=f'account:sub:1'))
-    markup.add(InlineKeyboardButton(text=f'🟢 3 месяца (649 р)', callback_data=f'account:sub:2'))
-    markup.add(InlineKeyboardButton(text=f'🟢 6 месяцев (1 290 р)', callback_data=f'account:sub:3'))
-    markup.add(InlineKeyboardButton(text=f'🟢 1 год (2 290 р)', callback_data=f'account:sub:4'))
+    price = Prices.objects.get(pk=1)
+    markup.add(InlineKeyboardButton(text=f'🟢 1 месяц ({price.price_1} р)', callback_data=f'account:sub:1'))
+    markup.add(InlineKeyboardButton(text=f'🟢 3 месяца ({price.price_2} р)', callback_data=f'account:sub:2'))
+    markup.add(InlineKeyboardButton(text=f'🟢 6 месяцев ({price.price_3} р)', callback_data=f'account:sub:3'))
+    markup.add(InlineKeyboardButton(text=f'🟢 1 год ({price.price_4} р)', callback_data=f'account:sub:4'))
     # markup.add(InlineKeyboardButton(text=f'🟢 Пожизненная (2000 р)', callback_data=f'account:sub:5'))
     markup.add(btn_back)
     return markup
