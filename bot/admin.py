@@ -37,8 +37,8 @@ class WithdrawalRequestInline(admin.TabularInline):
 
 class TransactionInline(admin.TabularInline):
     model = Transaction
-    fields = ('user', 'amount', 'currency', 'side')
-
+    fields = ('timestamp', 'amount','currency', 'user', 'side')
+    ordering = ['-timestamp']
     def has_add_permission(self, request, obj):
         if not DEBUG:
             return False
@@ -165,13 +165,25 @@ class TelegramReferralAdmin(admin.ModelAdmin):
 
 @admin.register(Transaction)
 class TransactionAdmin(admin.ModelAdmin):
-    list_display = ('user', 'amount', 'currency', 'timestamp', 'side')
+    list_display = ('timestamp', 'amount','currency', 'user', 'side')
+    list_display_links = ('user',)
+    list_editable = ('user',)
+    ordering = ['-timestamp']
 
     def has_add_permission(self, request):
         if not DEBUG:
             return False
         else:
             return True
+
+    def has_delete_permission(self, request, obj=None):
+        if not DEBUG:
+            return False
+        else:
+            return True
+
+    def has_change_permission(self, request, obj=None):
+        return False
 
     def get_actions(self, request):
         actions = super().get_actions(request)
