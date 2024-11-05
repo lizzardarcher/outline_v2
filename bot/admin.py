@@ -168,7 +168,6 @@ class TelegramReferralAdmin(admin.ModelAdmin):
 class TransactionAdmin(admin.ModelAdmin):
     list_display = ('timestamp', 'amount','currency', 'user', 'side')
     list_display_links = ('user',)
-    list_editable = ('user',)
     ordering = ['-timestamp']
 
     def has_add_permission(self, request):
