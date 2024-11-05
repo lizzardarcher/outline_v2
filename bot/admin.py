@@ -37,8 +37,9 @@ class WithdrawalRequestInline(admin.TabularInline):
 
 class TransactionInline(admin.TabularInline):
     model = Transaction
-    fields = ('timestamp', 'amount','currency', 'user', 'side')
+    fields = ('amount','currency', 'user', 'side')
     ordering = ['-timestamp']
+
     def has_add_permission(self, request, obj):
         if not DEBUG:
             return False
